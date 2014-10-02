@@ -52,12 +52,24 @@ def select_path(path, in_obj, out_obj):
             out_obj[component] = in_obj[component]
     else:
         selected = in_obj[component]
-        new_out = [] if isinstance(selected, list) else {}
-        select_path(path[1:], selected, new_out)
-        if type(component) == int:
-            out_obj.append(new_out)
-        else:
-            out_obj[component] = new_out
+        try:
+            new_out = out_obj[component]
+            select_path(path[1:], selected, new_out)
+        except (IndexError, KeyError):
+            new_out = [] if isinstance(selected, list) else {}
+            select_path(path[1:], selected, new_out)
+            if type(component) == int:
+                out_obj.append(new_out)
+            else:
+                out_obj[component] = new_out
+
+
+def select_paths(paths, obj):
+    '''Returns the union of all the paths selected on obj.'''
+    base = [] if isinstance(obj, list) else {}
+    for path in paths:
+        select_path(path, obj, base)
+    return base
 
 
 def get_result_nodes(selector, obj):

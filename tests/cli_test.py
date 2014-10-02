@@ -45,3 +45,28 @@ def test_mixed_select():
     out = {}
     cli.select_path(['foo', 2, 'z'], obj, out)
     eq_({'foo': [{ 'z': 4 }]}, out)
+
+    obj = {'foo': ['bar', {'baz': 'quux'}]}
+    out = {}
+    cli.select_path(['foo', 1], obj, out)
+    eq_({'foo': ['bar']}, out)
+
+
+def test_nonempty_out():
+    '''cli.select_path should preserve any objects already in out_obj.'''
+    obj = ['bar', {'baz': 'quux'}]
+    out = ['bar']
+    cli.select_path([2], obj, out)
+    eq_(['bar', {'baz': 'quux'}], out)
+
+    obj = {'foo': ['bar', {'baz': 'quux'}]}
+    out = {'foo': ['bar']}
+
+    cli.select_path(['foo', 2], obj, out)
+    eq_({'foo': ['bar', {'baz': 'quux'}]}, out)
+
+
+#def test_select_paths():
+#    obj = json.load(open('tests/data.json'))
+#    eq_({'foo': ['bar', {'baz': 'quux'}]},
+#        cli.select_paths([['foo', 1], ['foo', 2, 'baz']], obj))
