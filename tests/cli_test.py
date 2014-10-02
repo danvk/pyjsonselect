@@ -66,7 +66,7 @@ def test_nonempty_out():
     eq_({'foo': ['bar', {'baz': 'quux'}]}, out)
 
 
-#def test_select_paths():
-#    obj = json.load(open('tests/data.json'))
-#    eq_({'foo': ['bar', {'baz': 'quux'}]},
-#        cli.select_paths([['foo', 1], ['foo', 2, 'baz']], obj))
+def test_select_paths():
+    obj = json.load(open('tests/data.json'))
+    eq_({'foo': ['bar', {'baz': 'quux'}]},
+        cli.select_paths([['foo', 1], ['foo', 2, 'baz']], obj))
