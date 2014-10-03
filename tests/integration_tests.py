@@ -15,9 +15,9 @@ def load_commented_json(path):
 
 
 def test_all():
-    specs = glob.glob('tests/*.spec')
+    specs = glob.glob('tests/*.spec.json')
     for spec in specs:
         args = load_commented_json(spec)
-        expected = load_commented_json(spec.replace('.spec', '.out.json'))
+        expected = load_commented_json(spec.replace('.spec', '.out'))
         actual = cli.run(args)
         eq_(expected, actual)
