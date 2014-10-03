@@ -88,7 +88,7 @@ def run(args):
             presumption = KEEP
             del actions[0]
 
-        marks = {k: action for k in selector_to_ids(action, obj)}
+        marks = {k: mode for k in selector_to_ids(action, obj)}
         filter_object(obj, marks, presumption=presumption)
 
     return obj

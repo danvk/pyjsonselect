@@ -20,4 +20,9 @@ def test_all():
         args = load_commented_json(spec)
         expected = load_commented_json(spec.replace('.spec', '.out'))
         actual = cli.run(args)
+
+        if expected != actual:
+            json.dump(expected, open('/tmp/expected.json', 'w'), indent=2, sort_keys=True)
+            json.dump(actual, open('/tmp/actual.json', 'w'), indent=2, sort_keys=True)
+
         eq_(expected, actual)
