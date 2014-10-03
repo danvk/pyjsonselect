@@ -11,7 +11,7 @@ FLAGS = gflags.FLAGS
 
 def selector_to_ids(selector, obj):
     nodes = get_result_nodes(selector, obj)
-    return [id(node.parent.value) for node in nodes]
+    return [id(node.value) for node in nodes]
 
 
 def get_result_nodes(selector, obj):

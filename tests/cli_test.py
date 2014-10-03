@@ -21,3 +21,8 @@ def test_filter_object():
     obj = {'foo': ['bar', {'baz': 'quux'}]}
     cli.filter_object(obj, {id(obj['foo'][1]): cli.DELETE}, presumption=cli.KEEP)
     eq_({'foo': ['bar']}, obj)
+
+
+def test_contains():
+    obj = json.load(open('tests/data.json'))
+    node_ids = cli.selector_to_ids(':contains("whatever")', obj)
