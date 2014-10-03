@@ -70,3 +70,17 @@ def test_select_paths():
     obj = json.load(open('tests/data.json'))
     eq_({'foo': ['bar', {'baz': 'quux'}]},
         cli.select_paths([['foo', 1], ['foo', 2, 'baz']], obj))
+
+
+def test_filter_object():
+    obj = {'foo': ['bar', {'baz': 'quux'}]}
+    cli.filter_object(obj, {id(obj['foo'][0]): cli.KEEP})
+    eq_({'foo': ['bar']}, obj)
+
+    obj = {'foo': ['bar', {'baz': 'quux'}]}
+    cli.filter_object(obj, {id(obj['foo'][1]['baz']): cli.KEEP})
+    eq_({'foo': [{'baz': 'quux'}]}, obj)
+
+    obj = {'foo': ['bar', {'baz': 'quux'}]}
+    cli.filter_object(obj, {id(obj['foo']): cli.DELETE})
+    eq_({}, obj)
