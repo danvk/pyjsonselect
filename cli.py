@@ -72,25 +72,29 @@ def usage():
 '''
 
 
-if __name__ == '__main__':
-    path = sys.argv.pop()  # TODO: allow stdin
+def run(args):
+    path = args.pop()  # TODO: allow stdin
+    actions = args
 
-    actions = sys.argv[1:]
-
-    obj = json.load(open(json_file))
+    obj = json.load(open(path))
     while actions:
         action = actions[0]
         del actions[0]
         mode = KEEP
+        presumption = DELETE
         if action == '-v':
             mode = DELETE
             action = actions[0]
+            presumption = KEEP
             del actions[0]
 
         marks = {k: action for k in selector_to_ids(action, obj)}
-        filter_object(obj, marks, presumption=(2 - mode))
+        filter_object(obj, marks, presumption=presumption)
+
+    return obj
 
 
-    result = apply_selector(selector, obj)
-
-    print json.dumps(result, indent=2)
+if __name__ == '__main__':
+    obj = run(sys.argv[1:])
+    # TODO: preserve the input ordering of keys
+    print json.dumps(obj, indent=2, sort_keys=True)
