@@ -100,7 +100,6 @@ nthPat = re.compile(r'^\s*\(\s*(?:([+\-]?)([0-9]*)n\s*(?:([+\-])\s*([0-9]))?|(od
 def lex(string, off=None):
     if not off: off = 0
     m = _reExec(pat, string[off:])
-    sys.stderr.write('m: %r\n' % m)
     if not m: return None
     off+=len(m[0])
     a = None
