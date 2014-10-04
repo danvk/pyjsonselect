@@ -577,6 +577,7 @@ def interpolate(sel, arr):
 def compileSelector(sel, arr):
     if arr:
         sel = interpolate(sel, arr)
+    sys.stderr.write('Parsed selector: %r\n' % parse(sel))
     sel = parse(sel)[1]
     return {
         'sel': sel,
