@@ -40,3 +40,7 @@ def test_json_strings():
 
 # ... there are a few more tests in
 # lloyd/JSONSelect/blob/master/src/test/lex_test.html, but they fail upstream.
+
+# My own tests...
+def test_two_ids():
+    eq_([4, 5, "foo"], lex('.foo .bar'))

@@ -138,11 +138,7 @@ exprPat = re.compile(
 )
 
 def ist(o, t):
-    if (type(o) == int or type(o) == float) and t == 'number':
-        return True
-    if isinstance(o, str) and t == 'string':
-        return True
-    return False
+    return _jsTypeof(o) == t
 
 
 # TODO(danvk): fix .length, .indexOf, .lastIndexOf

@@ -1,6 +1,6 @@
 from nose.tools import *
 
-from jsonselectjs import parse, JsonSelectError
+from jsonselectjs import parse, parse_selector, JsonSelectError
 
 def test_Selectors():
     eq_([4, [{'id': "foo"}]], parse(".foo"))
@@ -14,6 +14,10 @@ def test_Selectors():
     with assert_raises(JsonSelectError) as context:
         parse("")
     eq_("selector expected", context.exception.message)
+
+
+def test_parseSelector():
+    eq_([4, {'id': 'foo'}], parse_selector('.foo .bar', 0, {}))
 
 
 def test_Combinators():
