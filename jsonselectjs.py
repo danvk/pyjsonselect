@@ -84,12 +84,14 @@ def _reExec(regex, string):
 
 def _jsTypeof(o):
     '''Return a string similar to JS's typeof.'''
+    if o == None:
+        return 'object'
+    elif isinstance(o, bool):
+        return 'boolean'
     if isinstance(o, int) or isinstance(o, float):
         return 'number'
     elif isinstance(o, list) or isinstance(o, dict):
         return 'object'
-    elif isinstance(o, bool):
-        return 'boolean'
     elif isinstance(o, basestring):
         return 'string'
     raise ValueError('Unknown type for object %s' % o)
@@ -243,7 +245,7 @@ def exprEval(expr, x):
 
 # THE PARSER
 
-def parse(string, off, nested=None, hints=None):
+def parse(string, off=0, nested=None, hints=None):
     if not hints: hints = {}
     if not nested: hints = {}
 
@@ -264,7 +266,8 @@ def parse(string, off, nested=None, hints=None):
             break
         # now we've parsed a selector, and have something else...
         if s[1] == ">" or s[1] == "~":
-            if s[1] == "~": hints['usesSiblingOp'] = True
+            if s[1] == "~":
+                hints['usesSiblingOp'] = True
             a.append(s[1])
             off = s[0]
         elif s[1] == ",":
@@ -281,10 +284,12 @@ def parse(string, off, nested=None, hints=None):
             off = s[0]
             break
 
-    if nested and not readParen: te("mcp", string)
-    if am: am.append(a)
+    if nested and not readParen:
+        te("mcp", string)
+    if am:
+        am.append(a)
     rv = None
-    if not nested and hints['usesSiblingOp']:
+    if not nested and hints.get('usesSiblingOp'):
         rv = normalize(am or a);
     else:
         rv = am or a
@@ -417,7 +422,7 @@ def parse_selector(string, off, hints):
                 h = parse(string, l[0], True)
                 l[0] = h[0]
                 if not s.get('has'): s['has'] = []
-                s['has'].push(h[1])
+                s['has'].append(h[1])
             elif l[2] == ":expr":
                 if s['expr']:
                     te("mexp", string)
@@ -523,7 +528,7 @@ def mn(node, sel, Id, num, tot):
     return [m, sels]
 
 
-def _forEach(sel, obj, fun, Id, num, tot):
+def _forEach(sel, obj, fun, Id=None, num=None, tot=None):
     a = sel[1:] if (sel[0] == ",") else [sel]
     a0 = []
     call = False
@@ -536,16 +541,17 @@ def _forEach(sel, obj, fun, Id, num, tot):
         if x[0]:
             call = True
         for v in x[1]:
-            a0.push(v)
+            a0.append(v)
     if len(a0) and _jsTypeof(obj) == "object":
         if len(a0) >= 1:
             a0 = [','] + a0
         if isArray(obj):
             for i, v in enumerate(obj):
-                _forEach(a0, v, fun, undefined, i, len(obj))
+                _forEach(a0, v, fun, None, i, len(obj))
         else:
-            for k, v in obj.iteritems():
-                _forEach(a0, v, fun, k)
+            if obj:
+                for k, v in obj.iteritems():
+                    _forEach(a0, v, fun, k)
     if call and fun:
         fun(obj)
 
