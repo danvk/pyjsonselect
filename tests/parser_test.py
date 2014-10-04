@@ -14,3 +14,26 @@ def test_Selectors():
     with assert_raises(JsonSelectError) as context:
         parse("")
     eq_("selector expected", context.exception.message)
+
+
+def test_Combinators():
+   eq_([9, [{'id': "foo"}, {'id': "bar"}]],
+       parse(".foo .bar"))
+   eq_([23, [",", [{'id': "foo", 'type': "string"}], [{'id': "foo", 'type': "number"}]]],
+       parse("string.foo , number.foo"))
+   eq_([24, [{'type': "string"}, ">", {'id': "foo"}, {'id': "bar", 'type': "number"}]],
+       parse("string > .foo number.bar"))
+   eq_([32, [",", [{'type': "string"}, ">", {'id': "foo"}, {'id': "bar", 'type': "number"}], [{'type': "object"}]]],
+       parse("string > .foo number.bar, object"))
+   eq_([
+         60,
+         [
+           ",",
+           [{'type': "string"}, ">", {'id': "foo"}, {'id': "bar", 'type': "number"}],
+           [{'type': "object"}],
+           [{'type': "string"}],
+           [{'id': "baz bing"}],
+           [{pc: ":root"}]
+         ]
+       ],
+       parse("string > .foo number.bar, object, string, .\"baz bing\", :root"))
