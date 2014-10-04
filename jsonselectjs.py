@@ -368,10 +368,10 @@ def parse_selector(string, off, hints):
         if l == None:
             break
         elif l[1] == toks.ide:
-            if s['id']: te("nmi", l[1])
+            if s.get('id'): te("nmi", l[1])
             s['id'] = l[2]
         elif l[1] == toks.psc:
-            if s['pc'] or s['pf']:
+            if s.get('pc') or s.get('pf'):
                 te("mpc", l[1])
             # collapse first-child and last-child into nth-child expressions
             if l[2] == ":first-child":
@@ -424,13 +424,13 @@ def parse_selector(string, off, hints):
                 if not s.get('has'): s['has'] = []
                 s['has'].append(h[1])
             elif l[2] == ":expr":
-                if s['expr']:
+                if s.get('expr'):
                     te("mexp", string)
                 e = exprParse(string, l[0])
                 l[0] = e[0]
                 s['expr'] = e[1]
             else:
-                if s['pc'] or s['pf']:
+                if s.get('pc') or s.get('pf'):
                     te("mpc", string)
                 s['pf'] = l[2];
                 m = _reExec(nthPat, string[l[0]:])
