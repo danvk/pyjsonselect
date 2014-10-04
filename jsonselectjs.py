@@ -231,10 +231,223 @@ def exprParse(string, off):
 
 def exprEval(expr, x):
     # TODO(danvk): figure out why this would be undefined
-    if expr == 'undefined':
-        return x
-    elif expr == None or _jsTypeof(expr) != 'object':
+    #if expr == 'undefined':
+    #    return x
+    #el
+    if expr == None or _jsTypeof(expr) != 'object':
         return expr
     lhs = exprEval(expr[0], x)
     rhs = exprEval(expr[2], x)
     return operators[expr[1]][1](lhs, rhs)
+
+
+# THE PARSER
+
+def parse(string, off, nested=None, hints=None):
+    if not hints: hints = {}
+    if not nested: hints = {}
+
+    a = []
+    am = None
+    readParen = None
+    if not off: off = 0
+
+    while True:
+        s = parse_selector(string, off, hints)
+        a.append(s[1])
+        off = s[0]
+        s = lex(string, off)
+        if s and s[1] == " ":
+            off = s[0]
+            s = lex(string, off)
+        if not s:
+            break
+        # now we've parsed a selector, and have something else...
+        if s[1] == ">" or s[1] == "~":
+            if s[1] == "~": hints['usesSiblingOp'] = True
+            a.append(s[1])
+            off = s[0]
+        elif s[1] == ",":
+            if am == None:
+                am = [ ",", a ]
+            else:
+                am.append(a)
+            a = []
+            off = s[0]
+        elif s[1] == ")":
+            if not nested:
+                te("ucp", s[1])
+            readParen = 1
+            off = s[0]
+            break
+
+    if nested and not readParen: te("mcp", string)
+    if am: am.append(a)
+    rv = None
+    if not nested and hints['usesSiblingOp']:
+        rv = normalize(am or a);
+    else:
+        rv = am or a
+    return [off, rv]
+
+
+def normalizeOne(sel):
+    sels = []
+    s = None
+    for i in range(len(sel)):
+        if sel[i] == '~':
+            # `A ~ B` maps to `:has(:root > A) > B`
+            # `Z A ~ B` maps to `Z :has(:root > A) > B, Z:has(:root > A) > B`
+            # This first clause, takes care of the first case, and the first half of the latter case.
+            if i < 2 or sel[i-2] != '>':
+                s = sel[:i-1]
+                s = s + [{'has':[[{'pc': ":root"}, ">", sel[i-1]]]}, ">"]
+                s = s + sel[i+1:]
+                sels.append(s);
+            # here we take care of the second half of above:
+            # (`Z A ~ B` maps to `Z :has(:root > A) > B, Z :has(:root > A) > B`)
+            # and a new case:
+            # Z > A ~ B maps to Z:has(:root > A) > B
+            if i > 1:
+                at = i - 3 if sel[i-2] == '>' else i-2
+                s = sel[:at]
+                z = {}
+                for k in sel[at].iterkeys():
+                    if k in sel[at]:
+                        z[k] = sel[at][k]
+                if not z.get('has'):
+                    z['has'] = []
+                z['has'].append([{'pc': ":root"}, ">", sel[i-1]])
+                s = s + [z, '>', sel.slice(i+1)]
+                sels.append(s)
+            break
+    if i == len(sel):
+        return sel
+    if sels.length > 1:
+        return [','] + sels
+    else:
+        return sels[0]
+
+
+def normalize(sels):
+    if sels[0] == ',':
+        r = [","]
+        for i in range(1, len(sels)):
+            s = normalizeOne(s[i])
+            r = r + (s[1:] if s[0] == ',' else s)
+        return r
+    else:
+        return normalizeOne(sels)
+
+
+def parse_selector(string, off, hints):
+    soff = off
+    s = { }
+    l = lex(string, off)
+    # skip space
+    if l and l[1] == " ":
+        soff = off = l[0]
+        l = lex(string, off)
+    if l and l[1] == toks.typ:
+        s['type'] = l[2]
+        off = l[0]
+        l = lex(string, off)
+    elif l and l[1] == "*":
+        # don't bother representing the universal sel, '*' in the
+        # parse tree, cause it's the default
+        off = l[0]
+        l = lex(string, off)
+
+    # now support either an id or a pc
+    while True:
+        if l == None:
+            break
+        elif l[1] == toks.ide:
+            if s['id']: te("nmi", l[1])
+            s['id'] = l[2]
+        elif l[1] == toks.psc:
+            if s['pc'] or s['pf']:
+                te("mpc", l[1])
+            # collapse first-child and last-child into nth-child expressions
+            if l[2] == ":first-child":
+                s['pf'] = ":nth-child"
+                s['a'] = 0
+                s['b'] = 1
+            elif l[2] == ":last-child":
+                s['pf'] = ":nth-last-child"
+                s['a'] = 0
+                s['b'] = 1
+            else:
+                s['pc'] = l[2]
+        elif l[1] == toks.psf:
+            if l[2] == ":val" or l[2] == ":contains":
+                s['expr'] = [ None, '=' if l[2] == ":val" else "*=", None];
+                # any amount of whitespace, followed by paren, string, paren
+                off = l[0]
+                l = lex(string, off)
+                if l and l[1] == " ":
+                    off = l[0]
+                    l = lex(string, off)
+                if not l or l[1] != "(":
+                    te("pex", string)
+                off = l[0]
+                l = lex(string, off)
+                if l and l[1] == " ":
+                    off = l[0]
+                    l = lex(string, off)
+                if not l or l[1] != toks.string:
+                    te("sex", string)
+                s['expr'][2] = l[2]
+                off = l[0]
+                l = lex(string, off)
+                if l and l[1] == " ":
+                    off = l[0]
+                    l = lex(string, off)
+                if not l or l[1] != ")":
+                    te("epex", string)
+            elif l[2] == ":has":
+                # any amount of whitespace, followed by paren
+                off = l[0]
+                l = lex(string, off)
+                if l and l[1] == " ":
+                    off = l[0]
+                    l = lex(string, off)
+                if not l or l[1] != "(":
+                    te("pex", string)
+                h = parse(string, l[0], True)
+                l[0] = h[0]
+                if not s.get('has'): s['has'] = []
+                s['has'].push(h[1])
+            elif l[2] == ":expr":
+                if s['expr']:
+                    te("mexp", string)
+                e = exprParse(string, l[0])
+                l[0] = e[0]
+                s['expr'] = e[1]
+            else:
+                if s['pc'] or s['pf']:
+                    te("mpc", string)
+                s['pf'] = l[2];
+                m = _reExec(nthPat, string[l[0]:])
+                if not m:
+                    te("mepf", string)
+                if m[5]:
+                    s['a'] = 2
+                    s['b'] = 1 if m[5] == "odd" else 0
+                elif m[6]:
+                    s['a'] = 0
+                    s['b'] = int(m[6])
+                else:
+                    s['a'] = int((m[1] or "+") + (m[2] or "1"))
+                    s['b'] = int(m[3] + m[4]) if m[3] else 0
+                l[0] += len(m[0])
+        else:
+            break
+        off = l[0]
+        l = lex(string, off)
+
+    # now if we didn't actually parse anything it's an error
+    if soff == off:
+        te("se", string)
+
+    return [off, s]
