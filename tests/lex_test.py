@@ -34,3 +34,9 @@ def test_pseudo_classes():
     eq_([11, 1, ":last-child"], lex(":last-child"))
     eq_([11, 1, ":only-child"], lex(":only-child"))
 
+def test_json_strings():
+    eq_([13, 4, "foo bar baz"], lex('"foo bar baz"'))
+    eq_([8, 4, " "], lex('"\\u0020"'))
+
+# ... there are a few more tests in
+# lloyd/JSONSelect/blob/master/src/test/lex_test.html, but they fail upstream.
