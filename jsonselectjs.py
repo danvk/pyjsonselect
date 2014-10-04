@@ -3,6 +3,7 @@
 
 import json
 import re
+import sys
 
 
 def jsonParse(string):
@@ -74,25 +75,45 @@ pat = re.compile(
 )
 
 
+def _reExec(regex, string):
+    '''This returns [full match, group1, group2, ...], just like JS.'''
+    m = regex.search(string)
+    if not m: return None
+    return [m.group()] + list(m.groups())
+
+
+def _jsTypeof(o):
+    '''Return a string similar to JS's typeof.'''
+    if isinstance(o, int) or isinstance(o, float):
+        return 'number'
+    elif isinstance(o, list) or isinstance(o, dict):
+        return 'object'
+    elif isinstance(o, bool):
+        return 'boolean'
+    elif isinstance(o, basestring):
+        return 'string'
+    raise ValueError('Unknown type for object %s' % o)
+
+
 # A regular expression for matching "nth expressions" (see grammar, what :nth-child() eats)
 nthPat = re.compile(r'^\s*\(\s*(?:([+\-]?)([0-9]*)n\s*(?:([+\-])\s*([0-9]))?|(odd|even)|([+\-]?[0-9]+))\s*\)')
-def lex(string, off):
-    if (!off) off = 0;
-    m = pat.search(string[off:])
-    if (!m) return None
-    m = [m.group()] + m.groups()
+def lex(string, off=None):
+    if not off: off = 0
+    m = _reExec(pat, string[off:])
+    sys.stderr.write('m: %r\n' % m)
+    if not m: return None
     off+=len(m[0])
-    a = None;
-    if (m[1]) a = [off, " "];
-    else if (m[2]) a = [off, m[0]];
-    else if (m[3]) a = [off, toks.typ, m[0]];
-    else if (m[4]) a = [off, toks.psc, m[0]];
-    else if (m[5]) a = [off, toks.psf, m[0]];
-    else if (m[6]) te("upc", string);
-    else if (m[8]) a = [off, m[7] ? toks.ide : toks.str, jsonParse(m[8])];
-    else if (m[9]) te("ujs", string);
-    else if (m[10]) a = [off, toks.ide, m[10].replace(/\\([^\r\n\f0-9a-fA-F])/g,"$1")];
-    return a;
+    a = None
+    if m[1]: a = [off, " "]
+    elif m[2]: a = [off, m[0]]
+    elif m[3]: a = [off, toks.typ, m[0]]
+    elif m[4]: a = [off, toks.psc, m[0]]
+    elif m[5]: a = [off, toks.psf, m[0]]
+    elif m[6]: te("upc", string)
+    elif m[8]: a = [off, toks.ide if m[7] else toks.str, jsonParse(m[8])]
+    elif m[9]: te("ujs", string)
+    elif m[10]: a = [off, toks.ide, re.sub(r'\\([^\r\n\f0-9a-fA-F])', r'\1', m[10])]
+    return a
 
 
 # THE EXPRESSION SUBSYSTEM
@@ -115,9 +136,13 @@ exprPat = re.compile(
         ")"
 )
 
-# TODO(danvk): t is either 'number' or 'string'. make this work.
-def is(o, t):
-    return type(o) == type(t)
+def ist(o, t):
+    if (type(o) == int or type(o) == float) and t == 'number':
+        return True
+    if isinstance(o, str) and t == 'string':
+        return True
+    return False
+
 
 # TODO(danvk): fix .length, .indexOf, .lastIndexOf
 operators = {
@@ -126,22 +151,21 @@ operators = {
     '%':  [ 9, lambda lhs, rhs: lhs % rhs ],
     '+':  [ 7, lambda lhs, rhs: lhs + rhs ],
     '-':  [ 7, lambda lhs, rhs: lhs - rhs ],
-    '<=': [ 5, lambda lhs, rhs: is(lhs, 'number') and is(rhs, 'number') and lhs <= rhs or is(lhs, 'string') and is(rhs, 'string') and lhs <= rhs ],
-    '>=': [ 5, lambda lhs, rhs: is(lhs, 'number') and is(rhs, 'number') and lhs >= rhs or is(lhs, 'string') and is(rhs, 'string') and lhs >= rhs ],
-    '$=': [ 5, lambda lhs, rhs: is(lhs, 'string') and is(rhs, 'string') and lhs.lastIndexOf(rhs) == lhs.length - rhs.length ],
-    '^=': [ 5, lambda lhs, rhs: is(lhs, 'string') and is(rhs, 'string') and lhs.indexOf(rhs) == 0 ],
-    '*=': [ 5, lambda lhs, rhs: is(lhs, 'string') and is(rhs, 'string') and lhs.indexOf(rhs) != -1 ],
-    '>':  [ 5, lambda lhs, rhs: is(lhs, 'number') and is(rhs, 'number') and lhs > rhs or is(lhs, 'string') and is(rhs, 'string') and lhs > rhs ],
-    '<':  [ 5, lambda lhs, rhs: is(lhs, 'number') and is(rhs, 'number') and lhs < rhs or is(lhs, 'string') and is(rhs, 'string') and lhs < rhs ],
+    '<=': [ 5, lambda lhs, rhs: ist(lhs, 'number') and ist(rhs, 'number') and lhs <= rhs or ist(lhs, 'string') and ist(rhs, 'string') and lhs <= rhs ],
+    '>=': [ 5, lambda lhs, rhs: ist(lhs, 'number') and ist(rhs, 'number') and lhs >= rhs or ist(lhs, 'string') and ist(rhs, 'string') and lhs >= rhs ],
+    '$=': [ 5, lambda lhs, rhs: ist(lhs, 'string') and ist(rhs, 'string') and lhs.lastIndexOf(rhs) == lhs.length - rhs.length ],
+    '^=': [ 5, lambda lhs, rhs: ist(lhs, 'string') and ist(rhs, 'string') and lhs.indexOf(rhs) == 0 ],
+    '*=': [ 5, lambda lhs, rhs: ist(lhs, 'string') and ist(rhs, 'string') and lhs.indexOf(rhs) != -1 ],
+    '>':  [ 5, lambda lhs, rhs: ist(lhs, 'number') and ist(rhs, 'number') and lhs > rhs or ist(lhs, 'string') and ist(rhs, 'string') and lhs > rhs ],
+    '<':  [ 5, lambda lhs, rhs: ist(lhs, 'number') and ist(rhs, 'number') and lhs < rhs or ist(lhs, 'string') and ist(rhs, 'string') and lhs < rhs ],
     '=':  [ 3, lambda lhs, rhs: lhs == rhs ],
     '!=': [ 3, lambda lhs, rhs: lhs != rhs ],
     '&&': [ 2, lambda lhs, rhs: lhs and rhs ],
     '||': [ 1, lambda lhs, rhs: lhs or rhs ]
 }
 
-# TODO(danvk): Make a function which returns a list like JS's re.exec()
 def exprLex(string, off):
-    m = exprPat.exec(string[off:]);
+    m = _reExec(exprPat, string[off:])
     v = None
     if m:
         off += len(m[0])
@@ -154,20 +178,20 @@ def exprLex(string, off):
 
 
 def exprParse2(string, off):
-    if (!off) off = 0;
+    if (not off): off = 0
     # first we expect a value or a '('
     l = exprLex(string, off)
     lhs = None
     if l and l[1] == '(':
         lhs = exprParse2(string, l[0])
-        var p = exprLex(string, lhs[0])
-        if !p or p[1] != ')': te('epex', string)
+        p = exprLex(string, lhs[0])
+        if not p or p[1] != ')': te('epex', string)
         off = p[0]
         lhs = [ '(', lhs[1] ]
-    elif !l or (l[1] and l[1] != 'x'):
+    elif not l or (l[1] and l[1] != 'x'):
         te("ee", string + " - " + ( l[1] and l[1] ))
     else:
-        lhs = None if (l[1] == 'x') else l[2])
+        lhs = None if (l[1] == 'x') else l[2]
         off = l[0]
 
     # now we expect a binary operator or a ')'
@@ -184,12 +208,11 @@ def exprParse2(string, off):
 
     # and now precedence!  how shall we put everything together?
     v = None
-    # TODO(danvk): typeof rhs == 'object' means it's a list or a dict
-    if typeof rhs !== 'object' or rhs[0] == '(' or operators[op[1]][0] < operators[rhs[1]][0]:
+    if _jsTypeof(rhs) != 'object' or rhs[0] == '(' or operators[op[1]][0] < operators[rhs[1]][0]:
         v = [lhs, op[1], rhs]
     else:
         v = rhs
-        while typeof rhs[0] == 'object' and rhs[0][0] != '(' and operators[op[1]][0] >= operators[rhs[0][1]][0]:
+        while _jsTypeof(rhs[0]) == 'object' and rhs[0][0] != '(' and operators[op[1]][0] >= operators[rhs[0][1]][0]:
             rhs = rhs[0]
         rhs[0] = [lhs, op[1], rhs[0]]
     return [off, v]
@@ -197,8 +220,7 @@ def exprParse2(string, off):
 
 def exprParse(string, off):
     def deparen(v):
-        # TODO(danvk): typeof rhs == 'object' means it's a list or a dict
-        if typeof v !== 'object' or v == None:
+        if _jsTypeof(v) != 'object' or v == None:
             return v
         elif v[0] == '(':
             return deparen(v[1])
@@ -212,8 +234,7 @@ def exprEval(expr, x):
     # TODO(danvk): figure out why this would be undefined
     if expr == 'undefined':
         return x
-    # TODO(danvk): typeof rhs == 'object' means it's a list or a dict
-    elif expr == None or typeof expr !== 'object':
+    elif expr == None or _jsTypeof(expr) != 'object':
         return expr
     lhs = exprEval(expr[0], x)
     rhs = exprEval(expr[2], x)
