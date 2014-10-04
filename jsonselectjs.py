@@ -451,3 +451,136 @@ def parse_selector(string, off, hints):
         te("se", string)
 
     return [off, s]
+
+
+# THE EVALUATOR
+
+def isArray(o):
+    return isinstance(o, list)
+
+# TODO(danvk): this works around a deficiency of JS that Python doesn't share.
+def mytypeof(o):
+    if o == None:
+        return "null"
+    to = _jsTypeof(o)
+    if to == "object" and isArray(o):
+        to = "array"
+    return to
+
+
+def mn(node, sel, Id, num, tot):
+    sels = []
+    cs = sel[1] if sel[0] == '>' else sel[0]
+    m = True
+    mod = None
+    if cs.get('type'):
+        m = m and (cs['type'] == mytypeof(node))
+    if cs.get('id'):
+        m = m and (cs['id'] == Id)
+    if m and cs.get('pf'):
+        if cs['pf'] == ":nth-last-child":
+            num = tot - num
+        else:
+            num+=1
+        if cs.get('a') == 0:
+            m = cs.get('b') == num
+        else:
+            mod = (num - cs['b']) % cs['a']
+
+            m = not mod and ((num*cs['a'] + cs['b']) >= 0)
+    if m and cs.get('has'):
+        # perhaps we should augment _forEach to handle a return value
+        # that indicates "client cancels traversal"?
+        class MySpecialError(Exception):
+            pass
+        def bail():
+            raise MySpecialError()
+
+        for el in cs['has']:
+            try:
+                _forEach(el, node, bail)
+            except MySpecialError:
+                continue
+            m = False
+            break
+    if m and cs.get('expr'):
+        m = exprEval(cs['expr'], node)
+
+    # should we repeat this selector for descendants?
+    if sel[0] != ">" and sel[0].get('pc') != ":root":
+        sels.append(sel)
+
+    if m:
+        # is there a fragment that we should pass down?
+        if sel[0] == ">":
+            if len(sel) > 2:
+                m = False
+                sels.append(sel[2:])
+        elif len(sel) > 1:
+            m = False
+            sels.append(sel[1:])
+
+    return [m, sels]
+
+
+def _forEach(sel, obj, fun, Id, num, tot):
+    a = sel[1:] if (sel[0] == ",") else [sel]
+    a0 = []
+    call = False
+    i = 0
+    j = 0
+    k = None
+    x = None
+    for i in range(len(a)):
+        x = mn(obj, a[i], Id, num, tot)
+        if x[0]:
+            call = True
+        for v in x[1]:
+            a0.push(v)
+    if len(a0) and _jsTypeof(obj) == "object":
+        if len(a0) >= 1:
+            a0 = [','] + a0
+        if isArray(obj):
+            for i, v in enumerate(obj):
+                _forEach(a0, v, fun, undefined, i, len(obj))
+        else:
+            for k, v in obj.iteritems():
+                _forEach(a0, v, fun, k)
+    if call and fun:
+        fun(obj)
+
+
+def _match(sel, obj):
+    a = []
+    _forEach(sel, obj, lambda x: a.append(x))
+    return a
+
+
+def interpolate(sel, arr):
+    while '?' in sel:
+        s = arr[0]
+        if isinstance(s, basestring):
+            s = json.dumps(s)
+        sel = sel.sub(r'\?', s, sel)
+        arr = arr[1:]
+    if arr:
+        raise ValueError("too many parameters supplied")
+    return sel
+
+
+def compileSelector(sel, arr):
+    if arr:
+        sel = interpolate(sel, arr)
+    sel = parse(sel)[1]
+    return {
+        'sel': sel,
+        'match': lambda obj: _match(sel, obj),
+        'forEach': lambda obj, fun: _forEach(sel, obj, fun)
+    }
+
+
+def match(sel, obj, arr=None):
+    return compileSelector(sel, arr)['match'](obj)
+
+def forEach(sel, obj, fun, arr=None):
+    return compileSelector(sel, arr)['forEach'](obj, fun)
