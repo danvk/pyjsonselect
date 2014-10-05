@@ -524,7 +524,7 @@ def mn(node, sel, Id, num, tot):
     return [m, sels]
 
 
-def _forEach(sel, obj, fun, Id=None, num=None, tot=None):
+def _forEach(sel, obj, fun, Id=None, num=0, tot=0):
     a = sel[1:] if (sel[0] == ",") else [sel]
     a0 = []
     call = False
@@ -584,5 +584,6 @@ def compileSelector(sel, arr):
 def match(sel, obj, arr=None):
     return compileSelector(sel, arr)['match'](obj)
 
+# TODO(danvk): change this to be a generator
 def forEach(sel, obj, fun, arr=None):
     return compileSelector(sel, arr)['forEach'](obj, fun)
