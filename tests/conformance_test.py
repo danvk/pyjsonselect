@@ -25,14 +25,18 @@ def _fileTuples(path):
 
 def _runTests(path):
     for i, (json_path, selector_path, output_path) in enumerate(_fileTuples(path)):
-        #sys.stderr.write('Selector: %s\n' % selector_path)
+        sys.stderr.write('Selector: %s\n' % selector_path)
         data = jsonLoadOrdered(open(json_path).read())
-        selector = open(selector_path).read()
+        selector = open(selector_path).read().strip()
         expected_output = open(output_path).read().strip()
 
         outputs = []
-        jsonselectjs.forEach(selector, data, lambda o: outputs.append(o))
-        actual_output = '\n'.join([json.dumps(o, indent=4) for o in outputs])
+        sys.stderr.write('Selector: [%s]\n' % selector)
+        try:
+            jsonselectjs.forEach(selector, data, lambda o: outputs.append(o))
+            actual_output = '\n'.join([json.dumps(o, indent=4) for o in outputs])
+        except jsonselectjs.JsonSelectError as e:
+            actual_output = 'Error: %s' % e.message
 
         # Remove trailing whitespace, see http://bugs.python.org/issue16333
         actual_output = '\n'.join([line.rstrip() for line in actual_output.split('\n')])
@@ -52,4 +56,4 @@ def test_level2():
     _runTests('tests/spec/level_2')
 
 def test_level3():
-    pass
+    _runTests('tests/spec/level_3')
