@@ -247,17 +247,14 @@ def exprEval(expr, x):
         return x
     if expr == None or _jsTypeof(expr) != 'object':
         return expr
-    #sys.stderr.write('%r\n' % expr)
     lhs = exprEval(expr[0], x)
     rhs = exprEval(expr[2], x)
-    #sys.stderr.write('%r %s %r\n' % (lhs, expr[1], rhs))
     return operators[expr[1]][1](lhs, rhs)
 
 
 # THE PARSER
 
 def parse(string, off=0, nested=None, hints=None):
-    #sys.stderr.write('parse %s, %s, %s, %r\n' % (string, off, nested, hints))
     if not hints: hints = {}
     if not nested: hints = {}
 
@@ -267,7 +264,6 @@ def parse(string, off=0, nested=None, hints=None):
     if not off: off = 0
 
     while True:
-        #sys.stderr.write('  %s, %s, %s, %r, %r\n' % (string, off, nested, hints, a))
         s = parse_selector(string, off, hints)
         a.append(s[1])
         off = s[0]
@@ -310,7 +306,6 @@ def parse(string, off=0, nested=None, hints=None):
 
 
 def normalizeOne(sel):
-    #sys.stderr.write('normalizeOne: %r\n' % sel)
     sels = []
     s = None
     for i in range(len(sel)):
@@ -345,7 +340,6 @@ def normalizeOne(sel):
     if len(sels) > 1:
         return [','] + sels
     else:
-        #sys.stderr.write('  --> %r\n' % sels[0])
         return sels[0]
 
 
@@ -490,14 +484,12 @@ def mytypeof(o):
 
 # mn = "match node"?
 def mn(node, sel, Id, num, tot):
-    #sys.stderr.write('mn: %r, %r\n' % (node, sel))
     sels = []
     cs = sel[1] if sel[0] == '>' else sel[0]
     m = True
     mod = None
     if cs.get('type'):
         m = m and (cs['type'] == mytypeof(node))
-        #sys.stderr.write('%s == %s? %s %r\n' % (cs['type'], mytypeof(node), m, node))
     if cs.get('id'):
         m = m and (cs['id'] == Id)
     if m and cs.get('pf'):
@@ -513,7 +505,6 @@ def mn(node, sel, Id, num, tot):
                 num = float('nan')  # mirror a JS quirk which jsonselect uses
         if cs.get('a') == 0:
             m = cs.get('b') == num
-            #sys.stderr.write('%s == %s? %s\n' % (cs.get('b'), num, m))
         else:
             mod = (num - cs['b']) % cs['a']
 
@@ -534,7 +525,6 @@ def mn(node, sel, Id, num, tot):
             m = False
             break
     if m and cs.get('expr'):
-        #sys.stderr.write('mn expr: %r %r\n' % (cs, node))
         m = exprEval(cs['expr'], node)
 
     # should we repeat this selector for descendants?
@@ -555,7 +545,6 @@ def mn(node, sel, Id, num, tot):
 
 
 def _forEach(sel, obj, fun, Id=None, num=None, tot=None):
-    #sys.stderr.write('forEach %s %s\n' % (json.dumps(sel), json.dumps(obj)))
     a = sel[1:] if (sel[0] == ",") else [sel]
     a0 = []
     call = False
