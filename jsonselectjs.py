@@ -70,7 +70,7 @@ pat = re.compile(
     # (8) bogus JSON strings missing a trailing quote
     "(\\\")|" +
     # (9) identifiers (unquoted)
-    "\\.((?:[_a-zA-Z]|[^\\0-\\0177]|\\\\[^\\r\\n\\f0-9a-fA-F])(?:[\\$_a-zA-Z0-9\\-]|[^\\u0000-\\u0177]|(?:\\\\[^\\r\\n\\f0-9a-fA-F]))*)" +
+    "\\.((?:[_a-zA-Z]|[^" + ur'\u0000-\u007f' + "]|\\\\[^\\r\\n\\f0-9a-fA-F])(?:[\\$_a-zA-Z0-9\\-]|[^" + ur'\u0000-\u007f' + "]|(?:\\\\[^\\r\\n\\f0-9a-fA-F]))*)" +
     ")"
 )
 
