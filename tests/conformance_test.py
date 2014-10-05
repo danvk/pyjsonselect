@@ -32,13 +32,11 @@ def _runTests(path):
     for i, (json_path, selector_path, output_path) in enumerate(_fileTuples(path)):
         if DEBUG_FILTER and DEBUG_FILTER not in selector_path:
             continue
-        sys.stderr.write('Selector: %s\n' % selector_path)
         data = jsonLoadOrdered(open(json_path).read())
         selector = open(selector_path).read().strip()
         expected_output = open(output_path).read().strip()
 
         outputs = []
-        sys.stderr.write('Selector: [%s]\n' % selector)
         try:
             jsonselectjs.forEach(selector, data, lambda o: outputs.append(o))
             actual_output = '\n'.join([json.dumps(o, indent=4) for o in outputs])

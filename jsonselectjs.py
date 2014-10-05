@@ -143,18 +143,25 @@ def ist(o, t):
     return _jsTypeof(o) == t
 
 
-# TODO(danvk): fix .length, .indexOf, .lastIndexOf
+def num_wrap(op):
+    def wrap(lhs, rhs):
+        try:
+            return op(lhs, rhs)
+        except TypeError:
+            return float('nan')
+    return wrap
+
 operators = {
-    '*':  [ 9, lambda lhs, rhs: lhs * rhs ],
-    '/':  [ 9, lambda lhs, rhs: lhs / rhs ],
-    '%':  [ 9, lambda lhs, rhs: lhs % rhs ],
-    '+':  [ 7, lambda lhs, rhs: lhs + rhs ],
-    '-':  [ 7, lambda lhs, rhs: lhs - rhs ],
+    '*':  [ 9, num_wrap(lambda lhs, rhs: lhs * rhs) ],
+    '/':  [ 9, num_wrap(lambda lhs, rhs: lhs / rhs) ],
+    '%':  [ 9, num_wrap(lambda lhs, rhs: lhs % rhs) ],
+    '+':  [ 7, num_wrap(lambda lhs, rhs: lhs + rhs) ],
+    '-':  [ 7, num_wrap(lambda lhs, rhs: lhs - rhs) ],
     '<=': [ 5, lambda lhs, rhs: ist(lhs, 'number') and ist(rhs, 'number') and lhs <= rhs or ist(lhs, 'string') and ist(rhs, 'string') and lhs <= rhs ],
     '>=': [ 5, lambda lhs, rhs: ist(lhs, 'number') and ist(rhs, 'number') and lhs >= rhs or ist(lhs, 'string') and ist(rhs, 'string') and lhs >= rhs ],
-    '$=': [ 5, lambda lhs, rhs: ist(lhs, 'string') and ist(rhs, 'string') and lhs.lastIndexOf(rhs) == lhs.length - rhs.length ],
-    '^=': [ 5, lambda lhs, rhs: ist(lhs, 'string') and ist(rhs, 'string') and lhs.indexOf(rhs) == 0 ],
-    '*=': [ 5, lambda lhs, rhs: ist(lhs, 'string') and ist(rhs, 'string') and lhs.indexOf(rhs) != -1 ],
+    '$=': [ 5, lambda lhs, rhs: ist(lhs, 'string') and ist(rhs, 'string') and lhs.rfind(rhs) == len(lhs) - len(rhs) ],
+    '^=': [ 5, lambda lhs, rhs: ist(lhs, 'string') and ist(rhs, 'string') and lhs.find(rhs) == 0 ],
+    '*=': [ 5, lambda lhs, rhs: ist(lhs, 'string') and ist(rhs, 'string') and lhs.find(rhs) != -1 ],
     '>':  [ 5, lambda lhs, rhs: ist(lhs, 'number') and ist(rhs, 'number') and lhs > rhs or ist(lhs, 'string') and ist(rhs, 'string') and lhs > rhs ],
     '<':  [ 5, lambda lhs, rhs: ist(lhs, 'number') and ist(rhs, 'number') and lhs < rhs or ist(lhs, 'string') and ist(rhs, 'string') and lhs < rhs ],
     '=':  [ 3, lambda lhs, rhs: lhs == rhs ],
