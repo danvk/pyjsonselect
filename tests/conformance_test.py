@@ -27,7 +27,7 @@ def test_level1():
     for json_path, selector_path, output_path in _fileTuples('tests/spec/level_1'):
         data = jsonLoadOrdered(open(json_path).read())
         selector = open(selector_path).read()
-        expected_output = [line.strip() for line in open(output_path)]
+        expected_output = [line.strip() for line in open(output_path) if line.strip()]
 
         #sys.stderr.write('selector: %s\n' % selector)
         #sys.stderr.write('output: %s\n' % '\n'.join(expected_output))

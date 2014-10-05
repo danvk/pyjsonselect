@@ -469,6 +469,7 @@ def mytypeof(o):
     return to
 
 
+# mn = "match node"?
 def mn(node, sel, Id, num, tot):
     sels = []
     cs = sel[1] if sel[0] == '>' else sel[0]
@@ -476,15 +477,20 @@ def mn(node, sel, Id, num, tot):
     mod = None
     if cs.get('type'):
         m = m and (cs['type'] == mytypeof(node))
+        #sys.stderr.write('%s == %s? %s %r\n' % (cs['type'], mytypeof(node), m, node))
     if cs.get('id'):
         m = m and (cs['id'] == Id)
     if m and cs.get('pf'):
         if cs['pf'] == ":nth-last-child":
             num = tot - num
         else:
-            num+=1
+            if num != None:
+                num+=1
+            else:
+                num = float('nan')  # mirror a JS quirk which jsonselect uses
         if cs.get('a') == 0:
             m = cs.get('b') == num
+            #sys.stderr.write('%s == %s? %s\n' % (cs.get('b'), num, m))
         else:
             mod = (num - cs['b']) % cs['a']
 
@@ -524,7 +530,7 @@ def mn(node, sel, Id, num, tot):
     return [m, sels]
 
 
-def _forEach(sel, obj, fun, Id=None, num=0, tot=0):
+def _forEach(sel, obj, fun, Id=None, num=None, tot=None):
     a = sel[1:] if (sel[0] == ",") else [sel]
     a0 = []
     call = False
