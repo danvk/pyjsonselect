@@ -27,14 +27,21 @@ def test_level1():
     for i, (json_path, selector_path, output_path) in enumerate(_fileTuples('tests/spec/level_1')):
         data = jsonLoadOrdered(open(json_path).read())
         selector = open(selector_path).read()
-        expected_output = [line.strip() for line in open(output_path) if line.strip()]
+        expected_output = open(output_path).read().strip()
 
         #sys.stderr.write('selector: %s\n' % selector)
         #sys.stderr.write('output: %s\n' % '\n'.join(expected_output))
 
-        actual_output = []
-        jsonselectjs.forEach(selector, data,
-                             lambda o: actual_output.append(json.dumps(o)))
+        outputs = []
+        jsonselectjs.forEach(selector, data, lambda o: outputs.append(o))
+        actual_output = '\n'.join([json.dumps(o, indent=4) for o in outputs])
+
+        # Remove trailing whitespace, see http://bugs.python.org/issue16333
+        actual_output = '\n'.join([line.rstrip() for line in actual_output.split('\n')])
+
+        if expected_output != actual_output:
+            open('/tmp/expected.txt', 'w').write(expected_output)
+            open('/tmp/actual.txt', 'w').write(actual_output)
         eq_(expected_output, actual_output, msg='%s: %s\n%r != %r' % (selector_path, selector.strip(), expected_output, actual_output))
 
         sys.stderr.write('%2d %s: passed\n' % (i, selector_path))
