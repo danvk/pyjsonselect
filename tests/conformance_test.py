@@ -23,14 +23,11 @@ def _fileTuples(path):
     return tuples
 
 
-def test_level1():
-    for i, (json_path, selector_path, output_path) in enumerate(_fileTuples('tests/spec/level_1')):
+def _runTests(path):
+    for i, (json_path, selector_path, output_path) in enumerate(_fileTuples(path)):
         data = jsonLoadOrdered(open(json_path).read())
         selector = open(selector_path).read()
         expected_output = open(output_path).read().strip()
-
-        #sys.stderr.write('selector: %s\n' % selector)
-        #sys.stderr.write('output: %s\n' % '\n'.join(expected_output))
 
         outputs = []
         jsonselectjs.forEach(selector, data, lambda o: outputs.append(o))
@@ -44,8 +41,11 @@ def test_level1():
             open('/tmp/actual.txt', 'w').write(actual_output)
         eq_(expected_output, actual_output, msg='%s: %s\n%r != %r' % (selector_path, selector.strip(), expected_output, actual_output))
 
-        sys.stderr.write('%2d %s: passed\n' % (i, selector_path))
+        sys.stderr.write('%s %2d %s: passed\n' % (path, i, selector_path))
 
+
+def test_level1():
+    _runTests('tests/spec/level_1')
 
 def test_level2():
     pass
