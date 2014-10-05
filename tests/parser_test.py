@@ -1,6 +1,6 @@
 from nose.tools import *
 
-from jsonselectjs import parse, parse_selector, JsonSelectError
+from jsonselectjs import parse, parse_selector, JsonSelectError, Undefined
 
 def test_Selectors():
     eq_([4, [{'id': "foo"}]], parse(".foo"))
@@ -47,3 +47,6 @@ def test_Combinators():
 def test_additional():
     eq_([15,[{"pc":":root","has":[[{"pc":":root"},">",{"id":"a"}]]},">",{"id":"b"}]],
         parse(':root > .a ~ .b'))
+
+    eq_([47,[{"has":[[{"expr":[Undefined,"=","Lloyd"]}]]},{"type":"object","has":[[{"expr":[Undefined,"=","Hilaiel"]}]]}]],
+        parse(':has(:val("Lloyd")) object:has(:val("Hilaiel"))'))

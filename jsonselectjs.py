@@ -86,6 +86,8 @@ def _jsTypeof(o):
     '''Return a string similar to JS's typeof.'''
     if o == None:
         return 'object'
+    elif o == Undefined:
+        return 'undefined'
     elif isinstance(o, bool):
         return 'boolean'
     if isinstance(o, int) or isinstance(o, float):
@@ -161,6 +163,12 @@ operators = {
     '||': [ 1, lambda lhs, rhs: lhs or rhs ]
 }
 
+
+# TODO(danvk): is this the canonical way to create a unique symbol?
+class Undefined(object):
+    pass
+
+
 def exprLex(string, off):
     m = _reExec(exprPat, string[off:])
     v = None
@@ -170,7 +178,7 @@ def exprLex(string, off):
         if m[1] or m[2] or m[3]:
             return [off, 0, jsonParse(v)]
         elif m[4]:
-            return [off, 0, None]
+            return [off, 0, Undefined]
         return [off, v]
 
 
@@ -178,7 +186,7 @@ def exprParse2(string, off):
     if (not off): off = 0
     # first we expect a value or a '('
     l = exprLex(string, off)
-    lhs = None
+    lhs = Undefined
     if l and l[1] == '(':
         lhs = exprParse2(string, l[0])
         p = exprLex(string, lhs[0])
@@ -188,7 +196,7 @@ def exprParse2(string, off):
     elif not l or (l[1] and l[1] != 'x'):
         te("ee", string + " - " + ( l[1] and l[1] ))
     else:
-        lhs = None if (l[1] == 'x') else l[2]
+        lhs = Undefined if (l[1] == 'x') else l[2]
         off = l[0]
 
     # now we expect a binary operator or a ')'
@@ -228,14 +236,14 @@ def exprParse(string, off):
 
 
 def exprEval(expr, x):
-    # TODO(danvk): figure out why this would be undefined
-    #if expr == 'undefined':
-    #    return x
-    #el
+    if expr == Undefined:
+        return x
     if expr == None or _jsTypeof(expr) != 'object':
         return expr
+    #sys.stderr.write('%r\n' % expr)
     lhs = exprEval(expr[0], x)
     rhs = exprEval(expr[2], x)
+    #sys.stderr.write('%r %s %r\n' % (lhs, expr[1], rhs))
     return operators[expr[1]][1](lhs, rhs)
 
 
@@ -386,7 +394,7 @@ def parse_selector(string, off, hints):
                 s['pc'] = l[2]
         elif l[1] == toks.psf:
             if l[2] == ":val" or l[2] == ":contains":
-                s['expr'] = [ None, '=' if l[2] == ":val" else "*=", None];
+                s['expr'] = [ Undefined, '=' if l[2] == ":val" else "*=", Undefined]
                 # any amount of whitespace, followed by paren, string, paren
                 off = l[0]
                 l = lex(string, off)
@@ -400,7 +408,7 @@ def parse_selector(string, off, hints):
                 if l and l[1] == " ":
                     off = l[0]
                     l = lex(string, off)
-                if not l or l[1] != toks.string:
+                if not l or l[1] != toks.str:
                     te("sex", string)
                 s['expr'][2] = l[2]
                 off = l[0]
@@ -519,6 +527,7 @@ def mn(node, sel, Id, num, tot):
             m = False
             break
     if m and cs.get('expr'):
+        #sys.stderr.write('mn expr: %r %r\n' % (cs, node))
         m = exprEval(cs['expr'], node)
 
     # should we repeat this selector for descendants?

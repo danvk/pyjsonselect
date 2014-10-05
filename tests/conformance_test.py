@@ -10,6 +10,11 @@ from tests.utils import jsonLoadOrdered
 import jsonselectjs
 
 
+# Set to something truthy to filter conformance tests.
+#DEBUG_FILTER = 'level_3/basic_multiple-has-with-strings.selector'
+DEBUG_FILTER = None
+
+
 def _fileTuples(path):
     '''Returns a list of path tuples (input, selector, output) under path.'''
     tuples = []
@@ -25,6 +30,8 @@ def _fileTuples(path):
 
 def _runTests(path):
     for i, (json_path, selector_path, output_path) in enumerate(_fileTuples(path)):
+        if DEBUG_FILTER and DEBUG_FILTER not in selector_path:
+            continue
         sys.stderr.write('Selector: %s\n' % selector_path)
         data = jsonLoadOrdered(open(json_path).read())
         selector = open(selector_path).read().strip()
