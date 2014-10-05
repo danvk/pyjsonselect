@@ -37,7 +37,7 @@ def test_Combinators():
            [{'type': "object"}],
            [{'type': "string"}],
            [{'id': "baz bing"}],
-           [{pc: ":root"}]
+           [{'pc': ":root"}]
          ]
        ],
        parse("string > .foo number.bar, object, string, .\"baz bing\", :root"))
