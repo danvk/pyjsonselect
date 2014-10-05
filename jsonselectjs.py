@@ -482,7 +482,10 @@ def mn(node, sel, Id, num, tot):
         m = m and (cs['id'] == Id)
     if m and cs.get('pf'):
         if cs['pf'] == ":nth-last-child":
-            num = tot - num
+            if num == None or tot == None:
+                num = float('nan')  # mirror JS quirk
+            else:
+                num = tot - num
         else:
             if num != None:
                 num+=1
