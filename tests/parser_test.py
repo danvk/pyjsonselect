@@ -41,3 +41,9 @@ def test_Combinators():
          ]
        ],
        parse("string > .foo number.bar, object, string, .\"baz bing\", :root"))
+
+
+# Additional tests not present in JSONselect
+def test_additional():
+    eq_([15,[{"pc":":root","has":[[{"pc":":root"},">",{"id":"a"}]]},">",{"id":"b"}]],
+        parse(':root > .a ~ .b'))

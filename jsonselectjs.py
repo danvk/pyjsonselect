@@ -242,6 +242,7 @@ def exprEval(expr, x):
 # THE PARSER
 
 def parse(string, off=0, nested=None, hints=None):
+    #sys.stderr.write('parse %s, %s, %s, %r\n' % (string, off, nested, hints))
     if not hints: hints = {}
     if not nested: hints = {}
 
@@ -251,6 +252,7 @@ def parse(string, off=0, nested=None, hints=None):
     if not off: off = 0
 
     while True:
+        #sys.stderr.write('  %s, %s, %s, %r, %r\n' % (string, off, nested, hints, a))
         s = parse_selector(string, off, hints)
         a.append(s[1])
         off = s[0]
@@ -293,6 +295,7 @@ def parse(string, off=0, nested=None, hints=None):
 
 
 def normalizeOne(sel):
+    #sys.stderr.write('normalizeOne: %r\n' % sel)
     sels = []
     s = None
     for i in range(len(sel)):
@@ -319,14 +322,15 @@ def normalizeOne(sel):
                 if not z.get('has'):
                     z['has'] = []
                 z['has'].append([{'pc': ":root"}, ">", sel[i-1]])
-                s = s + [z, '>', sel.slice(i+1)]
+                s = s + [z, '>'] + sel[i+1:]
                 sels.append(s)
             break
     if i == len(sel):
         return sel
-    if sels.length > 1:
+    if len(sels) > 1:
         return [','] + sels
     else:
+        #sys.stderr.write('  --> %r\n' % sels[0])
         return sels[0]
 
 
@@ -471,6 +475,7 @@ def mytypeof(o):
 
 # mn = "match node"?
 def mn(node, sel, Id, num, tot):
+    #sys.stderr.write('mn: %r, %r\n' % (node, sel))
     sels = []
     cs = sel[1] if sel[0] == '>' else sel[0]
     m = True
@@ -503,7 +508,7 @@ def mn(node, sel, Id, num, tot):
         # that indicates "client cancels traversal"?
         class MySpecialError(Exception):
             pass
-        def bail():
+        def bail(_):
             raise MySpecialError()
 
         for el in cs['has']:
@@ -534,6 +539,7 @@ def mn(node, sel, Id, num, tot):
 
 
 def _forEach(sel, obj, fun, Id=None, num=None, tot=None):
+    #sys.stderr.write('forEach %s %s\n' % (json.dumps(sel), json.dumps(obj)))
     a = sel[1:] if (sel[0] == ",") else [sel]
     a0 = []
     call = False

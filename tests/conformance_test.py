@@ -25,6 +25,7 @@ def _fileTuples(path):
 
 def _runTests(path):
     for i, (json_path, selector_path, output_path) in enumerate(_fileTuples(path)):
+        #sys.stderr.write('Selector: %s\n' % selector_path)
         data = jsonLoadOrdered(open(json_path).read())
         selector = open(selector_path).read()
         expected_output = open(output_path).read().strip()
@@ -48,7 +49,7 @@ def test_level1():
     _runTests('tests/spec/level_1')
 
 def test_level2():
-    pass
+    _runTests('tests/spec/level_2')
 
 def test_level3():
     pass
