@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-import sys
 import json
+import sys
+import time
 from collections import OrderedDict
 
 import jsonselectjs
 
-import gflags
-FLAGS = gflags.FLAGS
+DEBUG = False
 
 
 def selector_to_ids(selector, obj):
@@ -58,13 +58,38 @@ def usage():
 '''
 
 
+class Timer(object):
+    def __init__(self):
+        '''Utility for logging timing info. Does nothing if DEBUG=False.'''
+        self._start_time_ms_ = 1000 * time.time()
+        self._last_time_ms_ = self._start_time_ms_
+        self.log('Start')
+
+    def log(self, statement):
+        '''Write statement to stderr with timing info in DEBUG mode.'''
+        global DEBUG
+        time_ms = 1000 * time.time()
+        if DEBUG:
+            total_time_ms = time_ms - self._start_time_ms_
+            lap_time_ms = time_ms - self._last_time_ms_
+            sys.stderr.write('%6.f (%6.f ms) %s\n' % (
+                total_time_ms, lap_time_ms, statement))
+        self._last_time_ms_ = time_ms
+
+
 def run(args):
+    global DEBUG
     path = args.pop()  # TODO: allow stdin
     actions = args
 
-    sys.stderr.write('Loading JSON...\n')
+    if actions and actions[0] == '--debug':
+        DEBUG = True
+        del actions[0]
+
+    timer = Timer()
+    timer.log('Loading JSON...')
     obj = json.load(open(path), object_pairs_hook=OrderedDict)
-    sys.stderr.write('done\n')
+    timer.log('done loading JSON')
     while actions:
         action = actions[0]
         del actions[0]
@@ -76,12 +101,12 @@ def run(args):
             presumption = KEEP
             del actions[0]
 
-        sys.stderr.write('Gathering marks...\n')
+        timer.log('Applying selector: %s' % action)
         marks = {k: mode for k in selector_to_ids(action, obj)}
-        sys.stderr.write('done\n')
-        sys.stderr.write('filtering object...\n')
+        timer.log('done applying selector')
+        timer.log('filtering object...')
         filter_object(obj, marks, presumption=presumption)
-        sys.stderr.write('done\n')
+        timer.log('done filtering')
 
     return obj
 
