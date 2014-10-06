@@ -1,5 +1,31 @@
 #!/usr/bin/env python
-'''Direct port of jsonselect.js using JSONPath.'''
+'''pyjsonselect is a fully-compliant implementation of JSONSelect.
+
+Usage:
+
+    # prints 1, 2
+    for v in jsonselect.match('.foo', {'foo': 1, 'bar': {'foo': 2}}):
+        print v
+
+If you care about the iteration order of your keys (e.g. if you're processing a
+JSON file), then consider using collections.OrderedDict instead of the built-in
+Python dict.
+
+If you're not satisfied with pyjsonselect's performance, you may wish to prune
+some subtrees out of the selector search. You may do this by passing a filter
+function to match():
+
+    # prints 1 (the 2 value is in a pruned subtree).
+    obj = {'foo': 1, 'bar': {'foo': 2}}
+    filter_fn = lambda obj, matches: obj == {'foo': 2}
+    for v in jsonselect.match('.foo', obj, bailout_fn=filter_fn):
+        print v
+
+For large objects, suitable pruning can result in a massive speedup.
+
+Aside from bailout_fn, this is a direct port of the jsonselect.js reference
+implementation.
+'''
 
 import json
 import re
@@ -597,6 +623,19 @@ def interpolate(sel, arr):
 
 
 def match(sel, obj, arr=None, bailout_fn=None):
+    '''Match a selector to an object, yielding the matched values.
+
+    Args:
+        sel: The JSONSelect selector to apply (a string)
+        obj: The object against which to apply the selector
+        arr: If sel contains ? characters, then the values in this array will
+             be safely interpolated into the selector.
+        bailout_fn: A callback which takes two parameters, |obj| and |matches|.
+             This will be called on every node in obj. If it returns True, the
+             search for matches will be aborted below that node. The |matches|
+             parameter indicates whether the node matched the selector. This is
+             intended to be used as a performance optimization.
+    '''
     if arr:
         sel = interpolate(sel, arr)
     sel = parse(sel)[1]
