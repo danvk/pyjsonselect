@@ -35,6 +35,9 @@ errorCodes = {
 class JsonSelectError(Exception):
     pass
 
+class IgnoreSubtree(Exception):
+    '''throw this on the .match() iterator to prune the search.'''
+
 
 # throw an error message
 def te(ec, context):
@@ -538,7 +541,12 @@ def mn(node, sel, Id, num, tot):
     return [m, sels]
 
 
-def _forEach(sel, obj, Id=None, num=None, tot=None):
+# Iteration orders
+BottomUp = 0
+TopDown = 1
+
+
+def _forEach(sel, obj, Id=None, num=None, tot=None, iter_order=BottomUp):
     a = sel[1:] if (sel[0] == ",") else [sel]
     a0 = []
     call = False
@@ -552,24 +560,22 @@ def _forEach(sel, obj, Id=None, num=None, tot=None):
             call = True
         for v in x[1]:
             a0.append(v)
+    if call and iter_order == TopDown:
+        yield obj
     if len(a0) and _jsTypeof(obj) == "object":
         if len(a0) >= 1:
             a0 = [','] + a0
         if isArray(obj):
             for i, v in enumerate(obj):
-                for o in _forEach(a0, v, None, i, len(obj)):
+                for o in _forEach(a0, v, num=i, tot=len(obj), iter_order=iter_order):
                     yield o
         else:
             if obj:
                 for k, v in obj.iteritems():
-                    for o in _forEach(a0, v, k):
+                    for o in _forEach(a0, v, Id=k, iter_order=iter_order):
                         yield o
-    if call:
+    if call and iter_order == BottomUp:
         yield obj
-
-
-def _match(sel, obj):
-    return list(_forEach(sel, obj))
 
 
 def interpolate(sel, arr):
@@ -584,8 +590,8 @@ def interpolate(sel, arr):
     return sel
 
 
-def match(sel, obj, arr=None):
+def match(sel, obj, arr=None, iter_order=BottomUp):
     if arr:
         sel = interpolate(sel, arr)
     sel = parse(sel)[1]
-    return _forEach(sel, obj)
+    return _forEach(sel, obj, iter_order=iter_order)
