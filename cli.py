@@ -2,6 +2,7 @@
 
 import sys
 import json
+from collections import OrderedDict
 
 import jsonselectjs
 
@@ -61,7 +62,9 @@ def run(args):
     path = args.pop()  # TODO: allow stdin
     actions = args
 
-    obj = json.load(open(path))
+    sys.stderr.write('Loading JSON...\n')
+    obj = json.load(open(path), object_pairs_hook=OrderedDict)
+    sys.stderr.write('done\n')
     while actions:
         action = actions[0]
         del actions[0]
@@ -73,13 +76,16 @@ def run(args):
             presumption = KEEP
             del actions[0]
 
+        sys.stderr.write('Gathering marks...\n')
         marks = {k: mode for k in selector_to_ids(action, obj)}
+        sys.stderr.write('done\n')
+        sys.stderr.write('filtering object...\n')
         filter_object(obj, marks, presumption=presumption)
+        sys.stderr.write('done\n')
 
     return obj
 
 
 if __name__ == '__main__':
     obj = run(sys.argv[1:])
-    # TODO: preserve the input ordering of keys
-    print json.dumps(obj, indent=2, sort_keys=True)
+    print json.dumps(obj, indent=2)
