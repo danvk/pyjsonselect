@@ -16,7 +16,8 @@ def load_commented_json(path):
 
 def test_all():
     specs = glob.glob('tests/*.spec.json')
-    for spec in specs:
+    for idx, spec in enumerate(specs):
+        sys.stderr.write('%2d %s\n' % (idx, spec))
         args = load_commented_json(spec)
         expected = load_commented_json(spec.replace('.spec', '.out'))
         actual = cli.run(args)

@@ -3,29 +3,14 @@
 import sys
 import json
 
-from jsonselect import jsonselect
+import jsonselectjs
 
 import gflags
 FLAGS = gflags.FLAGS
 
 
 def selector_to_ids(selector, obj):
-    nodes = get_result_nodes(selector, obj)
-    return [id(node.value) for node in nodes]
-
-
-def get_result_nodes(selector, obj):
-    # This mirrors jsonselect.Parser.parse
-    p = jsonselect.Parser(obj)
-    tokens = jsonselect.lex(selector)
-
-    if p.peek(tokens, 'operator') == '*':
-        p.match(tokens, 'operator')
-        results = list(jsonselect.object_iter(obj))
-    else:
-        results = p.selector_production(tokens)
-
-    return results
+    return [id(node) for node in jsonselectjs.match(selector, obj)]
 
 
 UNSPECIFIED = 0

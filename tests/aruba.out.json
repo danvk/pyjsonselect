@@ -1,5 +1,4 @@
 {
-  "type": "FeatureCollection",
   "features": [
     {
       "geometry": {
@@ -27,37 +26,6 @@
         "name": "Aruba"
       },
       "id": "ABW"
-    },
-    {
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              74.89130859375001,
-              37.231640624999926
-            ],
-            [
-              74.84023437500002,
-              37.2250488281251
-            ],
-            [
-              74.76738281249999,
-              37.24916992187502
-            ]
-          ]
-        ]
-      },
-      "type": "Feature",
-      "properties": {
-        "description": "Afghanistan is a landlocked country located in Central Asia.",
-        "wikipedia_url": "http://en.wikipedia.org/wiki/Afghanistan",
-        "area_km2": 883481.7645257941,
-        "population": 28400000,
-        "population_year": "???",
-        "name": "Afghanistan"
-      },
-      "id": "AFG"
     }
   ]
 }
