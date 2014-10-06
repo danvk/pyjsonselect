@@ -1,10 +1,10 @@
 from nose.tools import *
 
-import jsonselectjs
+import jsonselect
 from tests.utils import jsonLoadOrdered
 
 def match(sel, obj):
-    return list(jsonselectjs.match(sel, obj))
+    return list(jsonselect.match(sel, obj))
 
 
 def test_Types():

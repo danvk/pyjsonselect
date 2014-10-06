@@ -5,7 +5,7 @@ import sys
 import time
 from collections import OrderedDict
 
-import jsonselectjs
+import jsonselect
 
 DEBUG = False
 
@@ -24,7 +24,7 @@ def selector_to_ids(selector, obj, mode):
         # marked for deletion.
         bail_fn = bail_on_match
 
-    matches = jsonselectjs.match(selector, obj, bailout_fn=bail_fn)
+    matches = jsonselect.match(selector, obj, bailout_fn=bail_fn)
     return [id(node) for node in matches]
 
 

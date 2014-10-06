@@ -1,8 +1,8 @@
 from nose.tools import *
 
-import jsonselectjs
+import jsonselect
 
-lex = jsonselectjs.lex
+lex = jsonselect.lex
 
 def test_simpleTokens():
     eq_([1, ">"], lex(">"))

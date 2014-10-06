@@ -7,7 +7,7 @@ import json
 from nose.tools import *
 
 from tests.utils import jsonLoadOrdered
-import jsonselectjs
+import jsonselect
 
 
 # Set to something truthy to filter conformance tests.
@@ -38,9 +38,9 @@ def _runTests(path):
 
         outputs = []
         try:
-            items = jsonselectjs.match(selector, data)
+            items = jsonselect.match(selector, data)
             actual_output = '\n'.join([json.dumps(o, indent=4) for o in items])
-        except jsonselectjs.JsonSelectError as e:
+        except jsonselect.JsonSelectError as e:
             actual_output = 'Error: %s' % e.message
 
         # Remove trailing whitespace, see http://bugs.python.org/issue16333
