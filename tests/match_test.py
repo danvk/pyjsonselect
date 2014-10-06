@@ -1,7 +1,11 @@
 from nose.tools import *
 
-from jsonselectjs import match
+import jsonselectjs
 from tests.utils import jsonLoadOrdered
+
+def match(sel, obj):
+    return list(jsonselectjs.match(sel, obj))
+
 
 def test_Types():
     eq_([None], match("null", None))

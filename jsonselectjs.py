@@ -584,19 +584,8 @@ def interpolate(sel, arr):
     return sel
 
 
-def compileSelector(sel, arr):
+def match(sel, obj, arr=None):
     if arr:
         sel = interpolate(sel, arr)
     sel = parse(sel)[1]
-    return {
-        'sel': sel,
-        'match': lambda obj: _match(sel, obj),
-        'forEach': lambda obj: _forEach(sel, obj)
-    }
-
-
-def match(sel, obj, arr=None):
-    return compileSelector(sel, arr)['match'](obj)
-
-def forEach(sel, obj, arr=None):
-    return compileSelector(sel, arr)['forEach'](obj)
+    return _forEach(sel, obj)

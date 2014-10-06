@@ -38,8 +38,8 @@ def _runTests(path):
 
         outputs = []
         try:
-            outputs = list(jsonselectjs.forEach(selector, data))
-            actual_output = '\n'.join([json.dumps(o, indent=4) for o in outputs])
+            items = jsonselectjs.match(selector, data)
+            actual_output = '\n'.join([json.dumps(o, indent=4) for o in items])
         except jsonselectjs.JsonSelectError as e:
             actual_output = 'Error: %s' % e.message
 
