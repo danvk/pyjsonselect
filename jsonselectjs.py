@@ -35,9 +35,6 @@ errorCodes = {
 class JsonSelectError(Exception):
     pass
 
-class IgnoreSubtree(Exception):
-    '''throw this on the .match() iterator to prune the search.'''
-
 
 # throw an error message
 def te(ec, context):
@@ -542,11 +539,12 @@ def mn(node, sel, Id, num, tot):
 
 
 # Iteration orders
+# TODO(danvk): rename PreOrder, PostOrder
 BottomUp = 0
 TopDown = 1
 
 
-def _forEach(sel, obj, Id=None, num=None, tot=None, iter_order=BottomUp):
+def _forEach(sel, obj, Id=None, num=None, tot=None, iter_order=BottomUp, bailout_fn=None):
     a = sel[1:] if (sel[0] == ",") else [sel]
     a0 = []
     call = False
@@ -560,20 +558,31 @@ def _forEach(sel, obj, Id=None, num=None, tot=None, iter_order=BottomUp):
             call = True
         for v in x[1]:
             a0.append(v)
+
     if call and iter_order == TopDown:
         yield obj
-    if len(a0) and _jsTypeof(obj) == "object":
-        if len(a0) >= 1:
-            a0 = [','] + a0
-        if isArray(obj):
-            for i, v in enumerate(obj):
-                for o in _forEach(a0, v, num=i, tot=len(obj), iter_order=iter_order):
-                    yield o
-        else:
-            if obj:
-                for k, v in obj.iteritems():
-                    for o in _forEach(a0, v, Id=k, iter_order=iter_order):
+
+    skip_recursion = False
+    if bailout_fn:
+        if bailout_fn(obj, call):
+            skip_recursion = True
+
+    if not skip_recursion:
+        if len(a0) and _jsTypeof(obj) == "object":
+            if len(a0) >= 1:
+                a0 = [','] + a0
+            if isArray(obj):
+                for i, v in enumerate(obj):
+                    iterator = _forEach(a0, v, num=i, tot=len(obj), iter_order=iter_order, bailout_fn=bailout_fn)
+                    for o in iterator:
                         yield o
+            else:
+                if obj:
+                    for k, v in obj.iteritems():
+                        iterator = _forEach(a0, v, Id=k, iter_order=iter_order, bailout_fn=bailout_fn)
+                        for o in iterator:
+                            yield o
+
     if call and iter_order == BottomUp:
         yield obj
 
@@ -590,8 +599,8 @@ def interpolate(sel, arr):
     return sel
 
 
-def match(sel, obj, arr=None, iter_order=BottomUp):
+def match(sel, obj, arr=None, iter_order=BottomUp, bailout_fn=None):
     if arr:
         sel = interpolate(sel, arr)
     sel = parse(sel)[1]
-    return _forEach(sel, obj, iter_order=iter_order)
+    return _forEach(sel, obj, iter_order=iter_order, bailout_fn=bailout_fn)

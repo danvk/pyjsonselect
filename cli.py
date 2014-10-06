@@ -9,14 +9,24 @@ import jsonselectjs
 
 DEBUG = False
 
-
-def selector_to_ids(selector, obj):
-    return [id(node) for node in jsonselectjs.match(selector, obj)]
-
-
 UNSPECIFIED = 0
 KEEP = 1
 DELETE = 2
+
+
+def selector_to_ids(selector, obj, mode):
+    def bail_on_match(obj, matches):
+        return matches
+
+    bail_fn = None
+    if mode == DELETE:
+        # There's no point in continuing a search below a node which will be
+        # marked for deletion.
+        bail_fn = bail_on_match
+
+    matches = jsonselectjs.match(selector, obj, bailout_fn=bail_fn)
+    return [id(node) for node in matches]
+
 
 def filter_object(obj, marks, presumption=DELETE):
     '''Filter down obj based on marks, presuming keys should be kept/deleted.
@@ -102,7 +112,7 @@ def run(args):
             del actions[0]
 
         timer.log('Applying selector: %s' % action)
-        marks = {k: mode for k in selector_to_ids(action, obj)}
+        marks = {k: mode for k in selector_to_ids(action, obj, mode)}
         timer.log('done applying selector')
         timer.log('filtering object...')
         filter_object(obj, marks, presumption=presumption)
