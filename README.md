@@ -20,6 +20,8 @@ for v in jsonselect.match('.foo', {'foo': 1, 'bar': {'foo': 2}):
 
 To run the tests:
 
-    git submodule update --init  # load conformance tests
-    pip install nose
-    nosetests
+```bash
+git submodule update --init  # load conformance tests
+pip install nose
+nosetests
+```
