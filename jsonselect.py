@@ -544,7 +544,7 @@ BottomUp = 0
 TopDown = 1
 
 
-def _forEach(sel, obj, Id=None, num=None, tot=None, iter_order=BottomUp, bailout_fn=None):
+def _forEach(sel, obj, Id=None, num=None, tot=None, bailout_fn=None):
     a = sel[1:] if (sel[0] == ",") else [sel]
     a0 = []
     call = False
@@ -559,9 +559,6 @@ def _forEach(sel, obj, Id=None, num=None, tot=None, iter_order=BottomUp, bailout
         for v in x[1]:
             a0.append(v)
 
-    if call and iter_order == TopDown:
-        yield obj
-
     skip_recursion = False
     if bailout_fn:
         if bailout_fn(obj, call):
@@ -573,17 +570,17 @@ def _forEach(sel, obj, Id=None, num=None, tot=None, iter_order=BottomUp, bailout
                 a0 = [','] + a0
             if isArray(obj):
                 for i, v in enumerate(obj):
-                    iterator = _forEach(a0, v, num=i, tot=len(obj), iter_order=iter_order, bailout_fn=bailout_fn)
+                    iterator = _forEach(a0, v, num=i, tot=len(obj), bailout_fn=bailout_fn)
                     for o in iterator:
                         yield o
             else:
                 if obj:
                     for k, v in obj.iteritems():
-                        iterator = _forEach(a0, v, Id=k, iter_order=iter_order, bailout_fn=bailout_fn)
+                        iterator = _forEach(a0, v, Id=k, bailout_fn=bailout_fn)
                         for o in iterator:
                             yield o
 
-    if call and iter_order == BottomUp:
+    if call:
         yield obj
 
 
@@ -599,8 +596,8 @@ def interpolate(sel, arr):
     return sel
 
 
-def match(sel, obj, arr=None, iter_order=BottomUp, bailout_fn=None):
+def match(sel, obj, arr=None, bailout_fn=None):
     if arr:
         sel = interpolate(sel, arr)
     sel = parse(sel)[1]
-    return _forEach(sel, obj, iter_order=iter_order, bailout_fn=bailout_fn)
+    return _forEach(sel, obj, bailout_fn=bailout_fn)

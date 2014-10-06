@@ -16,15 +16,6 @@ def test_abort():
     eq_([0, 1, 2, 3], out)
 
 
-def test_iter_order():
-    '''Sending an IgnoreSubtree message should prune the search.'''
-    obj = { 'foo': [1, 2, 3], 'bar': [4, 5, 6] }
-    eq_([obj, [1, 2, 3], 1, 2, 3, [4, 5, 6], 4, 5, 6],
-        list(jsonselect.match('*', obj, iter_order=jsonselect.TopDown)))
-    eq_([1, 2, 3, [1, 2, 3], 4, 5, 6, [4, 5, 6], obj],
-        list(jsonselect.match('*', obj, iter_order=jsonselect.BottomUp)))
-
-
 def test_ignore_subtree():
     obj = { 'foo': [1, 2, 3], 'bar': [4, 5, 6] }
     out = []
