@@ -510,18 +510,12 @@ def mn(node, sel, Id, num, tot):
 
             m = not mod and ((num*cs['a'] + cs['b']) >= 0)
     if m and cs.get('has'):
-        # perhaps we should augment _forEach to handle a return value
-        # that indicates "client cancels traversal"?
-        class MySpecialError(Exception):
-            pass
-        def bail(_):
-            raise MySpecialError()
-
         for el in cs['has']:
             try:
-                _forEach(el, node, bail)
-            except MySpecialError:
+                _forEach(el, node).next()
                 continue
+            except StopIteration:
+                pass
             m = False
             break
     if m and cs.get('expr'):
@@ -544,7 +538,7 @@ def mn(node, sel, Id, num, tot):
     return [m, sels]
 
 
-def _forEach(sel, obj, fun, Id=None, num=None, tot=None):
+def _forEach(sel, obj, Id=None, num=None, tot=None):
     a = sel[1:] if (sel[0] == ",") else [sel]
     a0 = []
     call = False
@@ -563,19 +557,19 @@ def _forEach(sel, obj, fun, Id=None, num=None, tot=None):
             a0 = [','] + a0
         if isArray(obj):
             for i, v in enumerate(obj):
-                _forEach(a0, v, fun, None, i, len(obj))
+                for o in _forEach(a0, v, None, i, len(obj)):
+                    yield o
         else:
             if obj:
                 for k, v in obj.iteritems():
-                    _forEach(a0, v, fun, k)
-    if call and fun:
-        fun(obj)
+                    for o in _forEach(a0, v, k):
+                        yield o
+    if call:
+        yield obj
 
 
 def _match(sel, obj):
-    a = []
-    _forEach(sel, obj, lambda x: a.append(x))
-    return a
+    return list(_forEach(sel, obj))
 
 
 def interpolate(sel, arr):
@@ -597,13 +591,12 @@ def compileSelector(sel, arr):
     return {
         'sel': sel,
         'match': lambda obj: _match(sel, obj),
-        'forEach': lambda obj, fun: _forEach(sel, obj, fun)
+        'forEach': lambda obj: _forEach(sel, obj)
     }
 
 
 def match(sel, obj, arr=None):
     return compileSelector(sel, arr)['match'](obj)
 
-# TODO(danvk): change this to be a generator
-def forEach(sel, obj, fun, arr=None):
-    return compileSelector(sel, arr)['forEach'](obj, fun)
+def forEach(sel, obj, arr=None):
+    return compileSelector(sel, arr)['forEach'](obj)
