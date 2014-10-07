@@ -1,7 +1,6 @@
 language: python
   - "2.7"
 
-install: git submodule update --init
+install: "pip install -r requirements.txt"
 
 script: nosetests
-
