@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import json
 import sys
@@ -118,9 +119,8 @@ def run(args):
         filter_object(obj, marks, presumption=presumption)
         timer.log('done filtering')
 
-    return obj
+    return json.dumps(obj, indent=2, separators=(',', ': '), ensure_ascii=False) + '\n'
 
 
 if __name__ == '__main__':
-    obj = run(sys.argv[1:])
-    print json.dumps(obj, indent=2)
+    print run(sys.argv[1:]).encode('utf8'),
