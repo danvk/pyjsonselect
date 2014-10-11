@@ -1,2 +1,2 @@
 # Knock out the coordinates object. Curaçao appears in the description.
-["-v", ".coordinates", "tests/unicode.geo.json"]
+["-v", ".coordinates", "tests/cli/unicode.geo.json"]

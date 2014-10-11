@@ -15,11 +15,11 @@ def load_commented_json(path):
 
 
 def test_all():
-    specs = glob.glob('tests/*.spec.json')
+    specs = glob.glob('tests/cli/*.spec')
     for idx, spec in enumerate(specs):
         sys.stderr.write('%2d %s\n' % (idx, spec))
         args = load_commented_json(spec)
-        expected = open(spec.replace('.spec', '.out')).read().decode('utf8')
+        expected = open(spec.replace('.spec', '.out.json')).read().decode('utf8')
         actual = cli.run(args)
 
         if expected != actual:
