@@ -94,6 +94,42 @@ def maybe_round(f):
     else:
         return repr(f)
 
+
+def apply_filter(objs, selector, mode):
+    '''Apply selector to transform each object in objs.
+
+    This operates in-place on objs. Empty objects are removed from the list.
+
+    Args:
+        mode: either KEEP (to keep selected items & their ancestors) or DELETE
+              (to delete selected items and their children).
+    '''
+    indices_to_delete = []
+    presumption = DELETE if mode == KEEP else KEEP
+    for i, obj in enumerate(objs):
+        timer.log('Applying selector: %s' % selector)
+        marks = {k: mode for k in selector_to_ids(selector, obj, mode)}
+        timer.log('done applying selector')
+        timer.log('filtering object...')
+        filter_object(obj, marks, presumption=presumption)
+        timer.log('done filtering')
+        if obj is None:
+            indices_to_delete.append(i)
+
+    for index in reversed(indices_to_delete):
+        del objs[index]
+
+
+def apply_selector(objs, selector):
+    '''Returns a list of objects which match the selector in any of objs.'''
+    out = []
+    for obj in objs:
+        timer.log('Applying selector: %s' % selector)
+        out += list(jsonselect.match(selector, objs))
+        timer.log('done applying selector')
+    return out
+
+
 timer = Timer()
 
 def run(args):
@@ -106,33 +142,36 @@ def run(args):
         del actions[0]
 
     timer.log('Loading JSON...')
-    obj = json.load(open(path), object_pairs_hook=OrderedDict)
+    objs = [json.load(open(path), object_pairs_hook=OrderedDict)]
     timer.log('done loading JSON')
+
+    action_mode = None
+
     while actions:
         action = actions[0]
         del actions[0]
-        mode = KEEP
-        presumption = DELETE
-        if action == '-v':
-            mode = DELETE
-            action = actions[0]
-            presumption = KEEP
+        mode = None
+        if action == '-k':
+            selector = actions[0]
             del actions[0]
-        if action == '.':
+            apply_filter(objs, selector, KEEP)
+        elif action == '-v':
+            selector = actions[0]
+            del actions[0]
+            apply_filter(objs, selector, DELETE)
+        elif action == '.':
             continue
+        else:
+            objs = apply_selector(objs, action)
 
-        timer.log('Applying selector: %s' % action)
-        marks = {k: mode for k in selector_to_ids(action, obj, mode)}
-        timer.log('done applying selector')
-        timer.log('filtering object...')
-        filter_object(obj, marks, presumption=presumption)
-        timer.log('done filtering')
+    def json_dump(o):
+        return json.dumps(o, indent=2, separators=(',', ': '), ensure_ascii=False)
 
     # Note: it's unclear whether rounding these floats is a good idea, but it's
     # what jq does, so we do it too to simplify comparisons.
     save = json.encoder.FLOAT_REPR
     json.encoder.FLOAT_REPR = maybe_round
-    r = json.dumps(obj, indent=2, separators=(',', ': '), ensure_ascii=False) + '\n'
+    r = '\n'.join([json_dump(o) for o in objs]) + '\n'
     json.encoder.FLOAT_REPR = save
     return r
 

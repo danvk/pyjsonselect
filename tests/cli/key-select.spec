@@ -1,1 +1,1 @@
-[".baz", "tests/cli/data.json"]
+["-k", ".baz", "tests/cli/data.json"]
