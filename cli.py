@@ -105,7 +105,6 @@ def run(args):
         DEBUG = True
         del actions[0]
 
-    timer = Timer()
     timer.log('Loading JSON...')
     obj = json.load(open(path), object_pairs_hook=OrderedDict)
     timer.log('done loading JSON')
@@ -140,3 +139,4 @@ def run(args):
 
 if __name__ == '__main__':
     print run(sys.argv[1:]).encode('utf8'),
+    timer.log('done printing')
