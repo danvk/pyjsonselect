@@ -1,6 +1,6 @@
 from nose.tools import *
 
-from jsonselect import parse, parse_selector, JsonSelectError, Undefined
+from jsonselect import parse, parse_selector, JsonSelectError, Undefined, normalize
 
 def test_Selectors():
     eq_([4, [{'id': "foo"}]], parse(".foo"))
@@ -50,3 +50,13 @@ def test_additional():
 
     eq_([47,[{"has":[[{"expr":[Undefined,"=","Lloyd"]}]]},{"type":"object","has":[[{"expr":[Undefined,"=","Hilaiel"]}]]}]],
         parse(':has(:val("Lloyd")) object:has(:val("Hilaiel"))'))
+
+    eq_([19, [{'id': 'features'}, '>', {'has':[[{'type': 'number'}]]}]],
+        parse('.features>!* number'))
+
+
+def test_normalize():
+    # rewrite of "subject of a selector with child" to use ":has"
+    sel = [{'id': 'features'}, '>', {'subject': True}, {}, {'type': 'number'}]
+    eq_([{'id': 'features'}, '>', {'has':[[{'type': 'number'}]]}],
+        normalize(sel))

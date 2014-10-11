@@ -82,7 +82,7 @@ pat = re.compile(
     # (1) whitespace
     "([\\r\\n\\t\\ ]+)|" +
     # (2) one-char ops
-    "([~*,>\\)\\(])|" +
+    "([!~*,>\\)\\(])|" +
     # (3) types names
     "(string|boolean|null|array|object|number)|" +
     # (4) pseudo classes
@@ -122,7 +122,7 @@ def _jsTypeof(o):
         return 'object'
     elif isinstance(o, basestring):
         return 'string'
-    raise ValueError('Unknown type for object %s' % o)
+    raise ValueError('Unknown type for object %s (%s)' % (o, type(o)))
 
 
 # A regular expression for matching "nth expressions" (see grammar, what :nth-child() eats)
@@ -324,7 +324,7 @@ def parse(string, off=0, nested=None, hints=None):
     if am:
         am.append(a)
     rv = None
-    if not nested and hints.get('usesSiblingOp'):
+    if not nested and (hints.get('usesSiblingOp') or hints.get('usesSubject')):
         rv = normalize(am or a);
     else:
         rv = am or a
@@ -361,6 +361,17 @@ def normalizeOne(sel):
                 s = s + [z, '>'] + sel[i+1:]
                 sels.append(s)
             break
+
+    for i in range(len(sel)):
+        if _jsTypeof(sel[i]) == 'object' and sel[i].get('subject'):
+            # Map `foo !bar baz` to `foo bar:has(baz)`
+            s = sel[:i] + [sel[i+1]]
+            s[-1].update({
+                'has': [sel[i+2:]]
+            })
+            sels.append(s)
+            break
+
     if i == len(sel):
         return sel
     if len(sels) > 1:
@@ -397,6 +408,10 @@ def parse_selector(string, off, hints):
         # parse tree, cause it's the default
         off = l[0]
         l = lex(string, off)
+    elif l and l[1] == "!":
+        off = l[0]
+        s['subject'] = True
+        hints['usesSubject'] = True
 
     # now support either an id or a pc
     while True:
@@ -562,12 +577,6 @@ def mn(node, sel, Id, num, tot):
             sels.append(sel[1:])
 
     return [m, sels]
-
-
-# Iteration orders
-# TODO(danvk): rename PreOrder, PostOrder
-BottomUp = 0
-TopDown = 1
 
 
 def _forEach(sel, obj, Id=None, num=None, tot=None, bailout_fn=None):

@@ -44,3 +44,6 @@ def test_json_strings():
 # My own tests...
 def test_two_ids():
     eq_([4, 5, "foo"], lex('.foo .bar'))
+
+def test_bang():
+    eq_([1, "!"], lex('!.foo .bar'))

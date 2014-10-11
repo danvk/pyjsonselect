@@ -62,3 +62,6 @@ def test_level2():
 
 def test_level3():
     _runTests('tests/spec/level_3')
+
+def test_level4():
+    _runTests('tests/level_4')
