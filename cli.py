@@ -88,6 +88,14 @@ class Timer(object):
         self._last_time_ms_ = time_ms
 
 
+def maybe_round(f):
+    if round(f) == f:
+        return '%d' % f
+    else:
+        return repr(f)
+
+timer = Timer()
+
 def run(args):
     global DEBUG
     path = args.pop()  # TODO: allow stdin
@@ -119,7 +127,13 @@ def run(args):
         filter_object(obj, marks, presumption=presumption)
         timer.log('done filtering')
 
-    return json.dumps(obj, indent=2, separators=(',', ': '), ensure_ascii=False) + '\n'
+    # Note: it's unclear whether rounding these floats is a good idea, but it's
+    # what jq does, so we do it too to simplify comparisons.
+    save = json.encoder.FLOAT_REPR
+    json.encoder.FLOAT_REPR = maybe_round
+    r = json.dumps(obj, indent=2, separators=(',', ': '), ensure_ascii=False) + '\n'
+    json.encoder.FLOAT_REPR = save
+    return r
 
 
 if __name__ == '__main__':
