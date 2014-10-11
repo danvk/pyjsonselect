@@ -119,6 +119,8 @@ def run(args):
             action = actions[0]
             presumption = KEEP
             del actions[0]
+        if action == '.':
+            continue
 
         timer.log('Applying selector: %s' % action)
         marks = {k: mode for k in selector_to_ids(action, obj, mode)}
