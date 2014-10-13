@@ -7,7 +7,7 @@ import json
 from nose.tools import *
 
 from tests.utils import jsonLoadOrdered
-import jsonselect
+from jsonselect import jsonselect
 
 
 # Set to something truthy to filter conformance tests.

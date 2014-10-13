@@ -1,6 +1,6 @@
 from nose.tools import *
 
-import jsonselect
+from jsonselect import jsonselect
 from tests.utils import jsonLoadOrdered
 
 def match(sel, obj):

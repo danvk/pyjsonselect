@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 
 setup(name='pyjsonselect',
-      version='0.2.0',
+      version='0.2.1',
       description='Fully-compliant implementation of JSONSelect',
       author='Dan Vanderkam',
       author_email='danvdk@gmail.com',
       url='https://github.com/danvk/pyjsonselect/',
-      packages=find_packages(exclude=['tests*']),
+      packages=['jsonselect'],
       install_requires=[],
       classifiers=[
           'Development Status :: 4 - Beta',

@@ -1,7 +1,7 @@
 from nose.tools import *
 import sys
 
-import jsonselect
+from jsonselect import jsonselect
 
 def test_abort():
     '''Explicitly stopping the iterator should stop the search.'''

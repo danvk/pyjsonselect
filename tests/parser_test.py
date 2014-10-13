@@ -1,6 +1,6 @@
 from nose.tools import *
 
-from jsonselect import parse, parse_selector, JsonSelectError, Undefined, normalize
+from jsonselect.jsonselect import parse, parse_selector, JsonSelectError, Undefined, normalize
 
 def test_Selectors():
     eq_([4, [{'id': "foo"}]], parse(".foo"))

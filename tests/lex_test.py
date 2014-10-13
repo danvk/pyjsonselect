@@ -1,6 +1,6 @@
 from nose.tools import *
 
-import jsonselect
+from jsonselect import jsonselect
 
 lex = jsonselect.lex
 

@@ -1,6 +1,6 @@
 from nose.tools import *
 
-from jsonselect import _jsTypeof
+from jsonselect.jsonselect import _jsTypeof
 
 
 def test_jsTypeof():

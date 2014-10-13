@@ -6,7 +6,7 @@ import sys
 import time
 from collections import OrderedDict
 
-import jsonselect
+from jsonselect import jsonselect
 
 DEBUG = False
 
