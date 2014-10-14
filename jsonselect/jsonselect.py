@@ -50,6 +50,7 @@ errorCodes = {
     "pex":  "opening paren expected '('",
     "se":   "selector expected",
     "sex":  "string expected",
+    "snex": "string or number expected",
     "sra":  "string required after '.'",
     "uc":   "unrecognized char",
     "ucp":  "unexpected closing paren",
@@ -74,7 +75,7 @@ class toks(object):
     typ=3  # type
     str=4  # string
     ide=5  # identifiers (or "classes", stuff after a dot)
-    num=6
+    num=6  # numbers
 
 
 # The primary lexing regular expression in jsonselect
@@ -455,7 +456,7 @@ def parse_selector(string, off, hints):
                     off = l[0]
                     l = lex(string, off)
                 if not l or (l[1] != toks.str and l[1] != toks.num):
-                    te("sex", string)
+                    te("snex", string)
                 s['expr'][2] = l[2]
                 off = l[0]
                 l = lex(string, off)
