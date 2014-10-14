@@ -16,7 +16,7 @@ To use:
 import jsonselect
 
 # prints 1, 2
-for v in jsonselect.match('.foo', {'foo': 1, 'bar': {'foo': 2}):
+for v in jsonselect.match('.foo', {'foo': 1, 'bar': {'foo': 2}}):
     print v
 ```
 
