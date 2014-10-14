@@ -50,6 +50,7 @@ errorCodes = {
     "pex":  "opening paren expected '('",
     "se":   "selector expected",
     "sex":  "string expected",
+    "snex": "string or number expected",
     "sra":  "string required after '.'",
     "uc":   "unrecognized char",
     "ucp":  "unexpected closing paren",
@@ -74,6 +75,7 @@ class toks(object):
     typ=3  # type
     str=4  # string
     ide=5  # identifiers (or "classes", stuff after a dot)
+    num=6  # numbers
 
 
 # The primary lexing regular expression in jsonselect
@@ -96,7 +98,9 @@ pat = re.compile(
     # (8) bogus JSON strings missing a trailing quote
     "(\\\")|" +
     # (9) identifiers (unquoted)
-    "\\.((?:[_a-zA-Z]|[^" + ur'\u0000-\u007f' + "]|\\\\[^\\r\\n\\f0-9a-fA-F])(?:[\\$_a-zA-Z0-9\\-]|[^" + ur'\u0000-\u007f' + "]|(?:\\\\[^\\r\\n\\f0-9a-fA-F]))*)" +
+    "\\.((?:[_a-zA-Z]|[^" + ur'\u0000-\u007f' + "]|\\\\[^\\r\\n\\f0-9a-fA-F])(?:[\\$_a-zA-Z0-9\\-]|[^" + ur'\u0000-\u007f' + "]|(?:\\\\[^\\r\\n\\f0-9a-fA-F]))*)|" +
+    # (10) numbers
+    "(-?\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d+)?)"
     ")"
 )
 
@@ -142,6 +146,7 @@ def lex(string, off=None):
     elif m[8]: a = [off, toks.ide if m[7] else toks.str, jsonParse(m[8])]
     elif m[9]: te("ujs", string)
     elif m[10]: a = [off, toks.ide, re.sub(r'\\([^\r\n\f0-9a-fA-F])', r'\1', m[10])]
+    elif m[11]: a = [off, toks.num, jsonParse(m[11])]
     return a
 
 
@@ -450,8 +455,8 @@ def parse_selector(string, off, hints):
                 if l and l[1] == " ":
                     off = l[0]
                     l = lex(string, off)
-                if not l or l[1] != toks.str:
-                    te("sex", string)
+                if not l or (l[1] != toks.str and l[1] != toks.num):
+                    te("snex", string)
                 s['expr'][2] = l[2]
                 off = l[0]
                 l = lex(string, off)
