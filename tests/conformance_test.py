@@ -40,8 +40,9 @@ def _runTests(path):
         try:
             items = jsonselect.match(selector, data)
             actual_output = '\n'.join([json.dumps(o, indent=4) for o in items])
+            
         except jsonselect.JsonSelectError as e:
-            actual_output = 'Error: %s' % e.message
+            actual_output = 'Error: {0}'.format(e)
 
         # Remove trailing whitespace, see http://bugs.python.org/issue16333
         actual_output = '\n'.join([line.rstrip() for line in actual_output.split('\n')])
