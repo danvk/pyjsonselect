@@ -7,6 +7,7 @@ import sys
 
 import cli
 
+PY3 = sys.version_info[0] == 3
 
 def load_commented_json(path):
     lines = open(path).read().split('\n')
@@ -19,7 +20,12 @@ def test_all():
     for idx, spec in enumerate(specs):
         sys.stderr.write('%2d %s\n' % (idx, spec))
         args = load_commented_json(spec)
-        expected = open(spec.replace('.spec', '.out.json')).read().decode('utf8')
+        
+        if PY3:
+            expected = open(spec.replace('.spec', '.out.json'),encoding='utf-8').read()
+        else:
+            expected = open(spec.replace('.spec', '.out.json')).read().decode('utf8')
+            
         actual = cli.run(args)
 
         if expected != actual:

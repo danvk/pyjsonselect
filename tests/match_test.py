@@ -1,5 +1,6 @@
 from nose.tools import *
 
+from collections import OrderedDict
 from jsonselect import jsonselect
 from tests.utils import jsonLoadOrdered
 
@@ -17,7 +18,8 @@ def test_Types():
 
 
 def test_IDs():
-    eq_(["aMatch", "anotherMatch"], match(".foo", {'foo': "aMatch", 'bar': [ { 'foo': "anotherMatch" } ] }))
+    obj=OrderedDict([('foo',"aMatch"), ('bar', [ { 'foo': "anotherMatch" } ]) ])
+    eq_(["aMatch", "anotherMatch"], match(".foo", obj))
 
 def test_Descendants():
     eq_([2], match(".foo .bar",    {'foo': { 'baz': 1, 'bar': 2 }, 'bar': 3}))
