@@ -3,4 +3,15 @@ python:
   - "2.7"
   - "3.4"
 
-script: nosetests
+install:
+  - pip install -r requirements.txt
+
+# Only track coverage using the 2.7 job
+script:
+  - if [[ $TRAVIS_PYTHON_VERSION != 2.7 ]]; then nosetests; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then nosetests --with-coverage; fi
+
+after_success:
+  - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
+
+sudo: false
