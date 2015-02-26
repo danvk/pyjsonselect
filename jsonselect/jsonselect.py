@@ -37,7 +37,6 @@ PY3 = sys.version_info[0] == 3
 if PY3:
     stringtype=str
     
-    
     def iteritems(d):
         return d.items()
         
