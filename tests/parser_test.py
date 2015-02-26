@@ -9,11 +9,11 @@ def test_Selectors():
     eq_([15, [{'id': "xxx@yyy", 'type': "string"}]], parse("string.xxx\\@yyy"))
     with assert_raises(JsonSelectError) as context:
         parse(" ")
-    eq_("selector expected in ' '", context.exception.message)
+    eq_("selector expected in ' '", str(context.exception))
 
     with assert_raises(JsonSelectError) as context:
         parse("")
-    eq_("selector expected", context.exception.message)
+    eq_("selector expected", str(context.exception))
 
 
 def test_parseSelector():

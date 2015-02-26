@@ -41,7 +41,7 @@ def filter_object(obj, marks, presumption=DELETE):
     if isinstance(obj, list):
         keys = reversed(range(0, len(obj)))
     else:
-        keys = obj.keys()
+        keys = list(obj.keys())
 
     for k in keys:
         v = obj[k]
@@ -63,10 +63,10 @@ def filter_object(obj, marks, presumption=DELETE):
 
 
 def usage():
-    print '''%s [selector] [-v exclude_selector]
+    print ('''%s [selector] [-v exclude_selector]
 
 ...
-'''
+''')
 
 
 class Timer(object):
@@ -177,5 +177,5 @@ def run(args):
 
 
 if __name__ == '__main__':
-    print run(sys.argv[1:]).encode('utf8'),
+    print (run(sys.argv[1:]).encode('utf8'))
     timer.log('done printing')

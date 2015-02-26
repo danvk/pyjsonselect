@@ -31,6 +31,26 @@ import json
 import re
 import sys
 
+PY3 = sys.version_info[0] == 3
+
+
+if PY3:
+    stringtype=str
+    
+    
+    def iteritems(d):
+        return d.items()
+        
+    def iterkeys(d):
+        return d.keys()
+else:
+    stringtype=basestring
+
+    def iteritems(d):
+        return d.iteritems()
+    def iterkeys(d):
+        return d.iterkeys()
+
 
 def jsonParse(string):
     return json.loads(string)
@@ -98,7 +118,7 @@ pat = re.compile(
     # (8) bogus JSON strings missing a trailing quote
     "(\\\")|" +
     # (9) identifiers (unquoted)
-    "\\.((?:[_a-zA-Z]|[^" + ur'\u0000-\u007f' + "]|\\\\[^\\r\\n\\f0-9a-fA-F])(?:[\\$_a-zA-Z0-9\\-]|[^" + ur'\u0000-\u007f' + "]|(?:\\\\[^\\r\\n\\f0-9a-fA-F]))*)|" +
+    "\\.((?:[_a-zA-Z]|[^" + u'\u0000-\u007f' + "]|\\\\[^\\r\\n\\f0-9a-fA-F])(?:[\\$_a-zA-Z0-9\\-]|[^" + u'\u0000-\u007f' + "]|(?:\\\\[^\\r\\n\\f0-9a-fA-F]))*)|" +
     # (10) numbers
     "(-?\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d+)?)"
     ")"
@@ -124,7 +144,7 @@ def _jsTypeof(o):
         return 'number'
     elif isinstance(o, list) or isinstance(o, dict):
         return 'object'
-    elif isinstance(o, basestring):
+    elif isinstance(o, stringtype):
         return 'string'
     raise ValueError('Unknown type for object %s (%s)' % (o, type(o)))
 
@@ -357,7 +377,7 @@ def normalizeOne(sel):
                 at = i - 3 if sel[i-2] == '>' else i-2
                 s = sel[:at]
                 z = {}
-                for k in sel[at].iterkeys():
+                for k in iterkeys(sel[at]):
                     if k in sel[at]:
                         z[k] = sel[at][k]
                 if not z.get('has'):
@@ -558,7 +578,7 @@ def mn(node, sel, Id, num, tot):
     if m and cs.get('has'):
         for el in cs['has']:
             try:
-                _forEach(el, node).next()
+                next(_forEach(el, node))
                 continue
             except StopIteration:
                 pass
@@ -615,7 +635,7 @@ def _forEach(sel, obj, Id=None, num=None, tot=None, bailout_fn=None):
                         yield o
             else:
                 if obj:
-                    for k, v in obj.iteritems():
+                    for k, v in iteritems(obj):
                         iterator = _forEach(a0, v, Id=k, bailout_fn=bailout_fn)
                         for o in iterator:
                             yield o
@@ -627,7 +647,7 @@ def _forEach(sel, obj, Id=None, num=None, tot=None, bailout_fn=None):
 def interpolate(sel, arr):
     while '?' in sel:
         s = arr[0]
-        if isinstance(s, basestring):
+        if isinstance(s, stringtype):
             s = json.dumps(s)
         sel = sel.sub(r'\?', s, sel)
         arr = arr[1:]
