@@ -18,7 +18,7 @@ def test_abort():
 
 
 def test_ignore_subtree():
-    obj=OrderedDict([('foo',[1,2,3]), ('bar', [4, 5, 6] ) ])
+    obj = OrderedDict([('foo', [1, 2, 3]), ('bar', [4, 5, 6] ) ])
     out = []
 
     def bail(obj, matches):
