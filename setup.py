@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='pyjsonselect',
-      version='0.2.1',
+      version='0.2.2',
       description='Fully-compliant implementation of JSONSelect',
       author='Dan Vanderkam',
       author_email='danvdk@gmail.com',
